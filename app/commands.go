@@ -1,39 +1,51 @@
 package main
 
 import (
-	"log"
 	"net"
-	"os"
 )
 
-func ping(conn net.Conn) {
-	_, err := conn.Write([]byte(toSimpleString("PONG")))
-	if err != nil {
-		log.Println("Error writing PONG to connection: ", err.Error())
-		os.Exit(1)
-	}
+// COMMAND DOCS command
+func commandDocs(conn net.Conn) {
+	write(conn, "*0\r\n")
 }
 
+// PING command
+func ping(conn net.Conn) {
+	write(conn, toSimpleString("PONG"))
+}
+
+// ECHO command
 func echo(conn net.Conn, command []string) {
 	if len(command) <= 1 {
-		_, err := conn.Write([]byte(toSimpleError("ERR wrong number of arguments for 'echo' command")))
-		if err != nil {
-			log.Println("Error writing to connection:", err.Error())
-			os.Exit(1)
-		}
+		write(conn, toSimpleError("ERR wrong number of arguments for 'echo' command"))
+		return
 	}
 
-	_, err := conn.Write([]byte(toBulkString(command[1])))
-	if err != nil {
-		log.Println("Error executing ECHO on connection:", err.Error())
-		os.Exit(1)
+	write(conn, toBulkString(command[1]))
+}
+
+// GET command
+func get(conn net.Conn, command []string) {
+	if len(command) != 2 {
+		write(conn, toSimpleError("ERR wrong number of arguments for 'get' command"))
+		return
+	}
+
+	val, ok := REDIS_STORE[command[1]]
+	if ok {
+		write(conn, toBulkString(val))
+	} else {
+		write(conn, toNullBulkString())
 	}
 }
 
-func commandDocs(conn net.Conn) {
-	_, err := conn.Write([]byte("*0\r\n"))
-	if err != nil {
-		log.Println("Error executing COMMAND DOCS on connection:", err.Error())
-		os.Exit(1)
+// SET command
+func set(conn net.Conn, command []string) {
+	if len(command) != 3 {
+		write(conn, toSimpleError(("ERR wrong number of arguments for 'set' command")))
+		return
 	}
+
+	REDIS_STORE[command[1]] = command[2]
+	write(conn, toSimpleString("OK"))
 }

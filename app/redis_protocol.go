@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// TODO: finish implementing Redis protocol
 /**
  * Implementation of the Redis Serialization Protocol (RESP): https://redis.io/docs/latest/develop/reference/protocol-spec/
  */
@@ -28,8 +29,6 @@ const (
 	PUSH            = ">"
 )
 
-// TODO: finish implementing Redis protocol
-
 func toSimpleString(s string) string {
 	return SIMPLE_STRING + s + "\r\n"
 }
@@ -40,6 +39,10 @@ func toSimpleError(errorMessage string) string {
 
 func toBulkString(s string) string {
 	return fmt.Sprintf("%s%d\r\n%s\r\n", BULK_STRING, len(s), s)
+}
+
+func toNullBulkString() string {
+	return BULK_STRING + "-1\r\n"
 }
 
 func expectRESPDataType(b []byte, pos int, expectedType string) (int, error) {

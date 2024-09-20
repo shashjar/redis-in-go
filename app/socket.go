@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net"
-	"os"
 	"strings"
 )
 
@@ -14,8 +13,8 @@ func handleConnection(conn net.Conn) {
 		command, err := readCommand(conn)
 		log.Println("Read command:", command, err)
 		if err != nil {
-			log.Println("Error reading command:", err.Error())
-			os.Exit(1)
+			log.Println("Error reading command from connection", err.Error())
+			return
 		}
 
 		if len(command) > 0 {
@@ -45,6 +44,14 @@ func readCommand(conn net.Conn) ([]string, error) {
 	return cmd, nil
 }
 
+func write(conn net.Conn, message string) {
+	_, err := conn.Write([]byte(message))
+	if err != nil {
+		log.Println("Error writing to connection:", err.Error())
+		conn.Close()
+	}
+}
+
 // TODO: instead of hard-coding these as an if-else block, can use a map of string to function
 // TODO: probably want to move this function to a different file eventually (specifically for executing the Redis commands once they've been parsed)
 func executeCommand(command []string, conn net.Conn) {
@@ -55,12 +62,12 @@ func executeCommand(command []string, conn net.Conn) {
 		ping(conn)
 	case "echo":
 		echo(conn, command)
+	case "get":
+		get(conn, command)
+	case "set":
+		set(conn, command)
 	default:
 		log.Printf("Unknown command: %s\n", command)
-		_, err := conn.Write([]byte(toSimpleError("ERR unknown command '" + command[0] + "'")))
-		if err != nil {
-			log.Println("Error writing to connection: ", err.Error())
-			os.Exit(1)
-		}
+		write(conn, toSimpleError("ERR unknown command '"+command[0]+"'"))
 	}
 }

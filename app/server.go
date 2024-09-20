@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+var REDIS_STORE = make(map[string]string)
+
 func configureLogger() {
 	log.SetFlags(0)
 }
