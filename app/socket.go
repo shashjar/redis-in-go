@@ -69,7 +69,7 @@ func executeCommand(command []string, conn net.Conn) {
 		}
 	default:
 		log.Printf("Unknown command: %s\n", command)
-		_, err := conn.Write([]byte(toSimpleString("Unknown command")))
+		_, err := conn.Write([]byte(toSimpleError("ERR unknown command '" + command[0] + "'")))
 		if err != nil {
 			log.Println("Error writing to connection: ", err.Error())
 			os.Exit(1)

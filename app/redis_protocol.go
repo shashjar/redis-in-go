@@ -7,6 +7,10 @@ import (
 	"strconv"
 )
 
+/**
+ * Implementation of the Redis Serialization Protocol (RESP): https://redis.io/docs/latest/develop/reference/protocol-spec/
+ */
+
 const (
 	SIMPLE_STRING   = "+"
 	SIMPLE_ERROR    = "-"
@@ -28,6 +32,10 @@ const (
 
 func toSimpleString(s string) string {
 	return SIMPLE_STRING + s + "\r\n"
+}
+
+func toSimpleError(errorMessage string) string {
+	return SIMPLE_ERROR + errorMessage + "\r\n"
 }
 
 func toBulkString(s string) string {
