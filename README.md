@@ -1,3 +1,3 @@
 # redis-in-go
 
-An implementation of Redis using Go
+An implementation of a Redis server using Go
