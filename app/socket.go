@@ -49,24 +49,12 @@ func readCommand(conn net.Conn) ([]string, error) {
 // TODO: probably want to move this function to a different file eventually (specifically for executing the Redis commands once they've been parsed)
 func executeCommand(command []string, conn net.Conn) {
 	switch strings.ToLower(command[0]) {
-	case "ping":
-		_, err := conn.Write([]byte(toSimpleString("PONG")))
-		if err != nil {
-			log.Println("Error writing PONG to connection: ", err.Error())
-			os.Exit(1)
-		}
-	case "echo":
-		_, err := conn.Write([]byte(toBulkString(command[1])))
-		if err != nil {
-			log.Println("Error executing ECHO on connection:", err.Error())
-			os.Exit(1)
-		}
 	case "command": // TODO: assumes this is COMMAND DOCS and returns an empty array to get redis-cli to work
-		_, err := conn.Write([]byte("*0\r\n"))
-		if err != nil {
-			log.Println("Error executing COMMAND DOCS on connection:", err.Error())
-			os.Exit(1)
-		}
+		commandDocs(conn)
+	case "ping":
+		ping(conn)
+	case "echo":
+		echo(conn, command)
 	default:
 		log.Printf("Unknown command: %s\n", command)
 		_, err := conn.Write([]byte(toSimpleError("ERR unknown command '" + command[0] + "'")))
