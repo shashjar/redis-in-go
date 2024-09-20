@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var REDIS_STORE = make(map[string]string)
+var REDIS_STORE = KeyValueStore{data: make(map[string]KeyValue)}
 
 func configureLogger() {
 	log.SetFlags(0)

@@ -2,6 +2,9 @@ package main
 
 import (
 	"net"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // COMMAND DOCS command
@@ -31,7 +34,7 @@ func get(conn net.Conn, command []string) {
 		return
 	}
 
-	val, ok := REDIS_STORE[command[1]]
+	val, ok := REDIS_STORE.Get(command[1])
 	if ok {
 		write(conn, toBulkString(val))
 	} else {
@@ -41,11 +44,34 @@ func get(conn net.Conn, command []string) {
 
 // SET command
 func set(conn net.Conn, command []string) {
-	if len(command) != 3 {
+	if len(command) != 3 && len(command) != 5 {
 		write(conn, toSimpleError(("ERR wrong number of arguments for 'set' command")))
 		return
 	}
 
-	REDIS_STORE[command[1]] = command[2]
+	expiresAt := time.Time{}
+	if len(command) == 5 {
+		var ttlUnit time.Duration
+		expiryFormat := strings.ToLower(command[3])
+
+		if expiryFormat == "ex" {
+			ttlUnit = time.Second
+		} else if expiryFormat == "px" {
+			ttlUnit = time.Millisecond
+		} else {
+			write(conn, toSimpleError(("ERR invalid expiration format for 'set' command")))
+			return
+		}
+
+		ttl, err := strconv.Atoi(command[4])
+		if err != nil {
+			write(conn, toSimpleError(("ERR invalid TTL value provided for 'set' command")))
+			return
+		}
+
+		expiresAt = time.Now().Add(time.Duration(ttl) * ttlUnit)
+	}
+
+	REDIS_STORE.Set(command[1], command[2], expiresAt)
 	write(conn, toSimpleString("OK"))
 }
