@@ -15,6 +15,9 @@ type KeyValueStore struct {
 	mu   sync.RWMutex
 }
 
+// TODO: currently this only does passive expiration (an expired key is deleted only
+// after a client attempts to access it). Implement active expiration as a challenge:
+// https://redis.io/docs/latest/commands/expire/#how-redis-expires-keys
 func (kvs *KeyValueStore) Get(key string) (string, bool) {
 	kvs.mu.RLock()
 	defer kvs.mu.RUnlock()
