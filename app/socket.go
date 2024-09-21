@@ -78,6 +78,8 @@ func executeCommand(command []string, conn net.Conn) {
 		get(conn, command)
 	case "set":
 		set(conn, command)
+	case "keys":
+		keys(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}

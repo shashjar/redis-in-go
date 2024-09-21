@@ -102,6 +102,25 @@ func set(conn net.Conn, command []string) {
 	write(conn, toSimpleString("OK"))
 }
 
+// KEYS command
+func keys(conn net.Conn, command []string) {
+	if len(command) != 2 || command[1] != "*" {
+		write(conn, toSimpleError("ERR invalid arguments for 'keys' command"))
+		return
+	}
+
+	var keys []string
+	for key, value := range REDIS_STORE.data {
+		if value.IsExpired() {
+			REDIS_STORE.DeleteKey(key)
+		} else {
+			keys = append(keys, key)
+		}
+	}
+
+	write(conn, toArray(keys))
+}
+
 func unknownCommand(conn net.Conn, command []string) {
 	log.Printf("Unknown command: %s\n", command)
 	write(conn, toSimpleError("ERR unknown command '"+command[0]+"'"))
