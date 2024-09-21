@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net"
 	"os"
@@ -10,6 +11,16 @@ var REDIS_STORE = KeyValueStore{data: make(map[string]KeyValue)}
 
 func configureLogger() {
 	log.SetFlags(0)
+}
+
+func parseCommandLineArguments() {
+	rdbDirPtr := flag.String("dir", DEFAULT_RDB_DIR, "Directory in which to store RDB file")
+	rdbFilenamePtr := flag.String("dbfilename", DEFAULT_RDB_FILENAME, "Filename for RDB file")
+
+	flag.Parse()
+
+	RDB_DIR = *rdbDirPtr
+	RDB_FILENAME = *rdbFilenamePtr
 }
 
 func runServer() {
@@ -35,5 +46,6 @@ func runServer() {
 
 func main() {
 	configureLogger()
+	parseCommandLineArguments()
 	runServer()
 }

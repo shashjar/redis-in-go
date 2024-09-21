@@ -45,6 +45,14 @@ func toNullBulkString() string {
 	return BULK_STRING + "-1\r\n"
 }
 
+func toArray(a []string) string {
+	arrayString := fmt.Sprintf("%s%d\r\n", ARRAY, len(a))
+	for _, s := range a {
+		arrayString += toBulkString(s)
+	}
+	return arrayString
+}
+
 func expectRESPDataType(b []byte, pos int, expectedType string) (int, error) {
 	if pos >= len(b) {
 		return pos, io.ErrUnexpectedEOF
