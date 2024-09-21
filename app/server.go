@@ -47,5 +47,6 @@ func runServer() {
 func main() {
 	configureLogger()
 	parseCommandLineArguments()
+	persistFromRDB()
 	runServer()
 }
