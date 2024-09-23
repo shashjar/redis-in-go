@@ -37,6 +37,14 @@ func toSimpleError(errorMessage string) string {
 	return SIMPLE_ERROR + errorMessage + "\r\n"
 }
 
+func toInteger(num int) string {
+	var sign string = ""
+	if num < 0 {
+		sign = "-"
+	}
+	return fmt.Sprintf("%s%s%d\r\n", INTEGER, sign, num)
+}
+
 func toBulkString(s string) string {
 	return fmt.Sprintf("%s%d\r\n%s\r\n", BULK_STRING, len(s), s)
 }
