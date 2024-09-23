@@ -52,6 +52,17 @@ func infoReplication(conn net.Conn) {
 	write(conn, toBulkString(replicationInfo))
 }
 
+// REPLCONF command
+func replconf(conn net.Conn) {
+	write(conn, toSimpleString("OK"))
+}
+
+// PSYNC command
+func psync(conn net.Conn) {
+	response := fmt.Sprintf("FULLRESYNC %s 0", SERVER_CONFIG.masterReplicationID)
+	write(conn, toSimpleString(response))
+}
+
 // PING command
 func ping(conn net.Conn) {
 	write(conn, toSimpleString("PONG"))
@@ -114,6 +125,24 @@ func set(conn net.Conn, command []string) {
 
 	REDIS_STORE.Set(command[1], command[2], expiresAt)
 	write(conn, toSimpleString("OK"))
+}
+
+// DEL command
+func del(conn net.Conn, command []string) {
+	if len(command) < 2 {
+		write(conn, toSimpleError("ERR no keys for deletion provided to 'del' command"))
+		return
+	}
+
+	numDeleted := 0
+	for _, keyToDelete := range command[1:] {
+		deleted := REDIS_STORE.DeleteKey(keyToDelete)
+		if deleted {
+			numDeleted += 1
+		}
+	}
+
+	write(conn, toInteger(numDeleted))
 }
 
 // KEYS command
