@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var REDIS_STORE = KeyValueStore{data: make(map[string]KeyValue)}
+
 type KeyValue struct {
 	value      string
 	expiration time.Time
