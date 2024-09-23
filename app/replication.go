@@ -27,7 +27,7 @@ func replicaHandshake() {
 	time.Sleep(500 * time.Millisecond)
 	write(conn, toArray([]string{"REPLCONF", "listening-port", SERVER_CONFIG.port}))
 	time.Sleep(500 * time.Millisecond)
-	write(conn, toArray([]string{"REPLCONF", "capa", "psync2"}))
+	write(conn, toArray([]string{"REPLCONF", "capa", "eof", "capa", "psync2"}))
 	time.Sleep(500 * time.Millisecond)
 	write(conn, toArray([]string{"PSYNC", "?", "-1"}))
 }

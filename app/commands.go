@@ -59,7 +59,7 @@ func replconf(conn net.Conn) {
 
 // PSYNC command
 func psync(conn net.Conn) {
-	response := fmt.Sprintf("FULLRESYNC %s 0", SERVER_CONFIG.masterReplicationID)
+	response := fmt.Sprintf("FULLRESYNC %s %d", SERVER_CONFIG.masterReplicationID, SERVER_CONFIG.masterReplicationOffset)
 	write(conn, toSimpleString(response))
 }
 
