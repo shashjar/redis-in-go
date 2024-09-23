@@ -4,7 +4,8 @@ package main
 type ServerConfig struct {
 	port                    string
 	isReplica               bool
-	replicaOf               string
+	masterHost              string
+	masterPort              string
 	masterReplicationID     string
 	masterReplicationOffset int
 }
