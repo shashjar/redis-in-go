@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -14,6 +15,7 @@ func commandDocs(conn net.Conn) {
 	write(conn, "*0\r\n")
 }
 
+// CONFIG GET command
 func configGet(conn net.Conn, command []string) {
 	if len(command) <= 2 {
 		write(conn, toSimpleError("ERR wrong number of arguments for 'config get' command"))
@@ -36,6 +38,18 @@ func configGet(conn net.Conn, command []string) {
 	}
 
 	write(conn, toArray(configParams))
+}
+
+// INFO REPLICATION command
+func infoReplication(conn net.Conn) {
+	var replicationInfo string
+	if SERVER_CONFIG.isReplica {
+		replicationInfo = "role:slave\n"
+	} else {
+		replicationInfo = fmt.Sprintf("role:master\nmaster_replid:%s\nmaster_repl_offset:%d\n", SERVER_CONFIG.masterReplicationID, SERVER_CONFIG.masterReplicationOffset)
+	}
+
+	write(conn, toBulkString(replicationInfo))
 }
 
 // PING command
@@ -124,4 +138,9 @@ func keys(conn net.Conn, command []string) {
 func unknownCommand(conn net.Conn, command []string) {
 	log.Printf("Unknown command: %s\n", command)
 	write(conn, toSimpleError("ERR unknown command '"+command[0]+"'"))
+}
+
+func invalidCommand(conn net.Conn, command []string) {
+	log.Printf("Invalid usage of command: %s\n", command)
+	write(conn, toSimpleError("ERR invalid usage of command '"+command[0]+"'"))
 }

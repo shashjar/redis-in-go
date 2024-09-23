@@ -61,14 +61,21 @@ func executeCommand(command []string, conn net.Conn) {
 		case "docs":
 			commandDocs(conn)
 		default:
-			unknownCommand(conn, command)
+			invalidCommand(conn, command)
 		}
 	case "config":
 		switch strings.ToLower(command[1]) {
 		case "get":
 			configGet(conn, command)
 		default:
-			unknownCommand(conn, command)
+			invalidCommand(conn, command)
+		}
+	case "info":
+		switch strings.ToLower(command[1]) {
+		case "replication":
+			infoReplication(conn)
+		default:
+			invalidCommand(conn, command)
 		}
 	case "ping":
 		ping(conn)
