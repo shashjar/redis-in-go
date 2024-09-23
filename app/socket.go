@@ -23,18 +23,30 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func readCommand(conn net.Conn) ([]string, error) {
+func readIntoBuffer(conn net.Conn) (int, []byte, error) {
 	buf := make([]byte, 128)
 	n, err := conn.Read(buf)
 	if err != nil {
-		return nil, err
+		return n, nil, err
 	}
 
 	if n == 0 {
-		return []string{}, nil
+		return 0, []byte{}, nil
 	}
 
 	buf = buf[:n]
+
+	return n, buf, nil
+}
+
+func readCommand(conn net.Conn) ([]string, error) {
+	n, buf, err := readIntoBuffer(conn)
+	if err != nil {
+		return nil, err
+	}
+	if n == 0 {
+		return []string{}, nil
+	}
 
 	cmd, err := parseCommand(buf)
 	if err != nil {
@@ -54,6 +66,8 @@ func write(conn net.Conn, message string) {
 
 // TODO: instead of hard-coding these as an if-else block, can use a map of string to function
 // TODO: probably want to move this function to a different file eventually (specifically for executing the Redis commands once they've been parsed)
+// TODO: server can currently error out when accessing command[1] if that wasn't provided - maybe create separate functions as handlers for the top-level commands
+// and then have those route to other functions based on the command arguments provided
 func executeCommand(command []string, conn net.Conn) {
 	switch strings.ToLower(command[0]) {
 	case "command":
@@ -77,6 +91,10 @@ func executeCommand(command []string, conn net.Conn) {
 		default:
 			invalidCommand(conn, command)
 		}
+	case "replconf":
+		replconf(conn)
+	case "psync":
+		psync(conn)
 	case "ping":
 		ping(conn)
 	case "echo":
@@ -85,6 +103,8 @@ func executeCommand(command []string, conn net.Conn) {
 		get(conn, command)
 	case "set":
 		set(conn, command)
+	case "del":
+		del(conn, command)
 	case "keys":
 		keys(conn, command)
 	default:

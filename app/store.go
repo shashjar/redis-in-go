@@ -49,6 +49,10 @@ func (kvs *KeyValueStore) Set(key string, value string, expiration time.Time) {
 	kvs.data[key] = KeyValue{value: value, expiration: expiration}
 }
 
-func (kvs *KeyValueStore) DeleteKey(key string) {
+// Deletes the provided key from the store. Is a no-op if the key does not exist in the store.
+// Returns a boolean indicating whether the key existed and was deleted.
+func (kvs *KeyValueStore) DeleteKey(key string) bool {
+	_, ok := kvs.data[key]
 	delete(kvs.data, key)
+	return ok
 }

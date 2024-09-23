@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 const NETWORK string = "tcp"
@@ -13,7 +14,8 @@ const ADDRESS string = "0.0.0.0"
 var SERVER_CONFIG = ServerConfig{
 	port:                    "6379",
 	isReplica:               false,
-	replicaOf:               "",
+	masterHost:              "",
+	masterPort:              "",
 	masterReplicationID:     "",
 	masterReplicationOffset: 0,
 }
@@ -33,7 +35,9 @@ func parseCommandLineArguments() {
 	SERVER_CONFIG.port = *portPtr
 	if len(*replicaOfPtr) > 0 {
 		SERVER_CONFIG.isReplica = true
-		SERVER_CONFIG.replicaOf = *replicaOfPtr
+		replicaOfInfo := strings.Split(*replicaOfPtr, " ")
+		SERVER_CONFIG.masterHost = replicaOfInfo[0]
+		SERVER_CONFIG.masterPort = replicaOfInfo[1]
 	}
 	RDB_DIR = *rdbDirPtr
 	RDB_FILENAME = *rdbFilenamePtr
