@@ -1,5 +1,7 @@
 package main
 
+import "net"
+
 // Represents the configuration of a Redis server
 type ServerConfig struct {
 	port                    string
@@ -8,4 +10,5 @@ type ServerConfig struct {
 	masterPort              string
 	masterReplicationID     string
 	masterReplicationOffset int
+	replicas                []net.Conn
 }

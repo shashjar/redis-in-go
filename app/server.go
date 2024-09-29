@@ -18,6 +18,7 @@ var SERVER_CONFIG = ServerConfig{
 	masterPort:              "",
 	masterReplicationID:     "",
 	masterReplicationOffset: 0,
+	replicas:                []net.Conn{},
 }
 
 func configureLogger() {
@@ -64,10 +65,11 @@ func runServer() {
 	}
 }
 
+// TODO: add nicer documentation throughout code (purpose statements?) and update repo README
 func main() {
 	configureLogger()
 	parseCommandLineArguments()
 	initializeReplication()
-	persistFromRDB()
+	persistFromRDB("." + RDB_DIR + "/" + RDB_FILENAME)
 	runServer()
 }
