@@ -61,6 +61,19 @@ func replconf(conn net.Conn) {
 func psync(conn net.Conn) {
 	response := fmt.Sprintf("FULLRESYNC %s %d", SERVER_CONFIG.masterReplicationID, SERVER_CONFIG.masterReplicationOffset)
 	write(conn, toSimpleString(response))
+	executeFullResync(conn)
+}
+
+// SAVE command
+func save(conn net.Conn) {
+	err := dumpToRDB()
+	if err != nil {
+		log.Println("Error creating RDB file to write state of key-value store to:", err.Error())
+		write(conn, toSimpleError("ERR failed to persist state of key-value store to RDB file"))
+		return
+	}
+
+	write(conn, toSimpleString("OK"))
 }
 
 // PING command

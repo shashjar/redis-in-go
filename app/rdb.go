@@ -15,18 +15,63 @@ var RDB_FILENAME string
 const DEFAULT_RDB_DIR = "/redis-data"
 const DEFAULT_RDB_FILENAME = "dump.rdb"
 
-// TODO: doesn't use the actual RDB binary file format - maybe implement this later. Refer to https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/
+// TODO: uses a custom RDB format instead of the actual RDB binary file format - maybe implement this later. Refer to https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/
 // & https://rdb.fnordig.de/file_format.html
-func persistFromRDB() {
-	filepath := "." + RDB_DIR + "/" + RDB_FILENAME
-	lines := readFile(filepath)
+func persistFromRDB(filePath string) {
+	lines, err := readFile(filePath)
+	if err != nil {
+		log.Println("Unable to persist from RDB file into Redis server:", err.Error())
+		return
+	}
 	processRDBKeyValuePairs(lines)
 }
 
-func readFile(filepath string) []string {
+func dumpToRDB() error {
+	filepath := "." + RDB_DIR + "/" + RDB_FILENAME
+	rdbBytes := getRDBBytes()
+
+	file, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(rdbBytes)
+	if err != nil {
+		return err
+	}
+	file.Sync()
+
+	return nil
+}
+
+func getRDBBytes() []byte {
+	numKeyValuePairs := len(REDIS_STORE.data)
+	var bytes []byte
+
+	bytes = append(bytes, []byte(strconv.Itoa(numKeyValuePairs)+"\n\n")...)
+	for key, value := range REDIS_STORE.data {
+		if value.IsExpired() {
+			REDIS_STORE.DeleteKey(key)
+			continue
+		}
+
+		bytes = append(bytes, []byte(key+"\n")...)
+		bytes = append(bytes, []byte(value.value+"\n")...)
+		if value.HasExpiration() {
+			bytes = append(bytes, []byte(strconv.Itoa(int(value.expiration.Unix()))+"\n")...)
+		}
+		bytes = append(bytes, []byte("\n")...)
+	}
+	bytes = bytes[:len(bytes)-1]
+
+	return bytes
+}
+
+func readFile(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Println("Error reading RDB file:", err.Error())
+		return nil, err
 	}
 	defer file.Close()
 
@@ -40,7 +85,7 @@ func readFile(filepath string) []string {
 		lines = append(lines, line)
 	}
 
-	return lines
+	return lines, nil
 }
 
 func processRDBKeyValuePairs(lines []string) {
