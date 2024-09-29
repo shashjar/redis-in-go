@@ -1,12 +1,14 @@
 package commands
 
 import (
+	"log"
 	"net"
 	"strings"
+
+	"github.com/shashjar/redis-in-go/app/protocol"
 )
 
 // TODO: instead of hard-coding these as an if-else block, can use a map of string to function
-// TODO: probably want to move this function to a different file eventually (specifically for executing the Redis commands once they've been parsed)
 // TODO: server can currently error out when accessing command[1] if that wasn't provided - maybe create separate functions as handlers for the top-level commands
 // and then have those route to other functions based on the command arguments provided
 func executeCommand(command []string, conn net.Conn) {
@@ -54,4 +56,14 @@ func executeCommand(command []string, conn net.Conn) {
 	default:
 		unknownCommand(conn, command)
 	}
+}
+
+func unknownCommand(conn net.Conn, command []string) {
+	log.Printf("Unknown command: %s\n", command)
+	write(conn, protocol.ToSimpleError("ERR unknown command '"+command[0]+"'"))
+}
+
+func invalidCommand(conn net.Conn, command []string) {
+	log.Printf("Invalid usage of command: %s\n", command)
+	write(conn, protocol.ToSimpleError("ERR invalid usage of command '"+command[0]+"'"))
 }
