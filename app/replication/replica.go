@@ -9,14 +9,13 @@ import (
 
 	"github.com/shashjar/redis-in-go/app/persistence"
 	"github.com/shashjar/redis-in-go/app/protocol"
-	"github.com/shashjar/redis-in-go/app/store"
 )
 
 const NETWORK string = "tcp"
 
 // Sends the replication handshake from the replica to the master.
 func replicaHandshake() {
-	conn, err := net.Dial(NETWORK, store.SERVER_CONFIG.MasterHost+":"+store.SERVER_CONFIG.MasterPort)
+	conn, err := net.Dial(NETWORK, SERVER_CONFIG.MasterHost+":"+SERVER_CONFIG.MasterPort)
 	if err != nil {
 		log.Println("Failed to connect to master from replica:", err.Error())
 		os.Exit(1)
@@ -25,7 +24,7 @@ func replicaHandshake() {
 	// TODO: not checking responses from the master to these, just sleeping and assuming these are all OK
 	writeFromReplica(conn, protocol.ToArray([]string{"PING"}))
 	time.Sleep(500 * time.Millisecond)
-	writeFromReplica(conn, protocol.ToArray([]string{"REPLCONF", "listening-port", store.SERVER_CONFIG.Port}))
+	writeFromReplica(conn, protocol.ToArray([]string{"REPLCONF", "listening-port", SERVER_CONFIG.Port}))
 	time.Sleep(500 * time.Millisecond)
 	writeFromReplica(conn, protocol.ToArray([]string{"REPLCONF", "capa", "eof", "capa", "psync2"}))
 	time.Sleep(500 * time.Millisecond)

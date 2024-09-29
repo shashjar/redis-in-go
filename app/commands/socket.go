@@ -5,14 +5,14 @@ import (
 	"net"
 
 	"github.com/shashjar/redis-in-go/app/protocol"
-	"github.com/shashjar/redis-in-go/app/store"
+	"github.com/shashjar/redis-in-go/app/replication"
 )
 
 func HandleConnection(conn net.Conn) {
 	defer conn.Close()
 	log.Println("Handling connection")
 	for {
-		command, err := readCommand(conn)
+		command, buf, err := readCommand(conn)
 		log.Println("Read command:", command, err)
 		if err != nil {
 			log.Println("Error reading command from connection", err.Error())
@@ -21,6 +21,7 @@ func HandleConnection(conn net.Conn) {
 
 		if len(command) > 0 {
 			executeCommand(command, conn)
+			replication.PropagateCommand(command[0], buf)
 		}
 	}
 }
@@ -28,7 +29,7 @@ func HandleConnection(conn net.Conn) {
 // Writes the provided message to the provided connection, but only if this server is not a replica, since
 // replicas should not send responses back to the master after receiving propagated commands.
 func write(conn net.Conn, message string) {
-	if !store.SERVER_CONFIG.IsReplica {
+	if !replication.SERVER_CONFIG.IsReplica {
 		_, err := conn.Write([]byte(message))
 		if err != nil {
 			log.Println("Error writing to connection:", err.Error())
@@ -53,19 +54,19 @@ func readIntoBuffer(conn net.Conn) (int, []byte, error) {
 	return n, buf, nil
 }
 
-func readCommand(conn net.Conn) ([]string, error) {
+func readCommand(conn net.Conn) ([]string, []byte, error) {
 	n, buf, err := readIntoBuffer(conn)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if n == 0 {
-		return []string{}, nil
+		return []string{}, nil, nil
 	}
 
 	cmd, err := protocol.ParseCommand(buf)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return cmd, nil
+	return cmd, buf, nil
 }

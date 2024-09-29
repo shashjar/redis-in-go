@@ -9,7 +9,6 @@ import (
 	"github.com/shashjar/redis-in-go/app/commands"
 	"github.com/shashjar/redis-in-go/app/persistence"
 	"github.com/shashjar/redis-in-go/app/replication"
-	"github.com/shashjar/redis-in-go/app/store"
 )
 
 const NETWORK string = "tcp"
@@ -27,7 +26,7 @@ func parseCommandLineArguments() {
 
 	flag.Parse()
 
-	store.UpdateServerConfig(portPtr, replicaOfPtr)
+	replication.UpdateServerConfig(portPtr, replicaOfPtr)
 	persistence.RDB_DIR = *rdbDirPtr
 	persistence.RDB_FILENAME = *rdbFilenamePtr
 }
@@ -35,7 +34,7 @@ func parseCommandLineArguments() {
 func runServer() {
 	log.Println("Running server...")
 
-	l, err := net.Listen(NETWORK, ADDRESS+":"+store.SERVER_CONFIG.Port)
+	l, err := net.Listen(NETWORK, ADDRESS+":"+replication.SERVER_CONFIG.Port)
 	if err != nil {
 		log.Println("Failed to bind to port 6379:", err.Error())
 		os.Exit(1)
