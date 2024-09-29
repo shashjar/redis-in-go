@@ -17,8 +17,12 @@ type KeyValueStore struct {
 	mu   sync.RWMutex
 }
 
+func (kv *KeyValue) HasExpiration() bool {
+	return !kv.expiration.IsZero()
+}
+
 func (kv *KeyValue) IsExpired() bool {
-	return !kv.expiration.IsZero() && time.Now().After(kv.expiration)
+	return kv.HasExpiration() && time.Now().After(kv.expiration)
 }
 
 // TODO: currently this only does passive expiration (an expired key is deleted only
