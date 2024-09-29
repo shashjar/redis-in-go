@@ -12,7 +12,6 @@ import (
 // TODO: server can currently error out when accessing command[1] if that wasn't provided - maybe create separate functions as handlers for the top-level commands
 // and then have those route to other functions based on the command arguments provided
 func executeCommand(command []string, conn net.Conn) {
-	// TODO: need to propagate commands to all replicas (if this is a master)
 	switch strings.ToLower(command[0]) {
 	case "command":
 		switch strings.ToLower(command[1]) {
