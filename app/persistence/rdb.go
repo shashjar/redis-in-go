@@ -48,13 +48,14 @@ func DumpToRDB() error {
 }
 
 func GetRDBBytes() []byte {
-	numKeyValuePairs := len(store.REDIS_STORE.Data)
+	data := store.Data()
+	numKeyValuePairs := len(data)
 	var bytes []byte
 
 	bytes = append(bytes, []byte(strconv.Itoa(numKeyValuePairs)+"\n\n")...)
-	for key, value := range store.REDIS_STORE.Data {
+	for key, value := range data {
 		if value.IsExpired() {
-			store.REDIS_STORE.DeleteKey(key)
+			store.DeleteKey(key)
 			continue
 		}
 
@@ -124,7 +125,7 @@ func processRDBKeyValuePairs(lines []string) {
 			expiresAt = time.Unix(int64(unixExpirationTimestamp), 0)
 		}
 
-		store.REDIS_STORE.Set(key, value, expiresAt)
+		store.Set(key, value, expiresAt)
 	}
 }
 

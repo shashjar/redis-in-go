@@ -16,7 +16,7 @@ func del(conn net.Conn, command []string) {
 
 	numDeleted := 0
 	for _, keyToDelete := range command[1:] {
-		deleted := store.REDIS_STORE.DeleteKey(keyToDelete)
+		deleted := store.DeleteKey(keyToDelete)
 		if deleted {
 			numDeleted += 1
 		}

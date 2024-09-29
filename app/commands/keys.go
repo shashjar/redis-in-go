@@ -15,9 +15,9 @@ func keys(conn net.Conn, command []string) {
 	}
 
 	var keys []string
-	for key, value := range store.REDIS_STORE.Data {
+	for key, value := range store.Data() {
 		if value.IsExpired() {
-			store.REDIS_STORE.DeleteKey(key)
+			store.DeleteKey(key)
 		} else {
 			keys = append(keys, key)
 		}

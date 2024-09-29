@@ -40,6 +40,6 @@ func set(conn net.Conn, command []string) {
 		expiresAt = time.Now().Add(time.Duration(ttl) * ttlUnit)
 	}
 
-	store.REDIS_STORE.Set(command[1], command[2], expiresAt)
+	store.Set(command[1], command[2], expiresAt)
 	write(conn, protocol.ToSimpleString("OK"))
 }

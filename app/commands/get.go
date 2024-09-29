@@ -14,7 +14,7 @@ func get(conn net.Conn, command []string) {
 		return
 	}
 
-	val, ok := store.REDIS_STORE.Get(command[1])
+	val, ok := store.Get(command[1])
 	if ok {
 		write(conn, protocol.ToBulkString(val))
 	} else {
