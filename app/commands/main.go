@@ -1,68 +1,9 @@
-package main
+package commands
 
 import (
-	"log"
 	"net"
 	"strings"
 )
-
-func handleConnection(conn net.Conn) {
-	defer conn.Close()
-	log.Println("Handling connection")
-	for {
-		command, err := readCommand(conn)
-		log.Println("Read command:", command, err)
-		if err != nil {
-			log.Println("Error reading command from connection", err.Error())
-			return
-		}
-
-		if len(command) > 0 {
-			executeCommand(command, conn)
-		}
-	}
-}
-
-func readIntoBuffer(conn net.Conn) (int, []byte, error) {
-	buf := make([]byte, 128)
-	n, err := conn.Read(buf)
-	if err != nil {
-		return n, nil, err
-	}
-
-	if n == 0 {
-		return 0, []byte{}, nil
-	}
-
-	buf = buf[:n]
-
-	return n, buf, nil
-}
-
-func readCommand(conn net.Conn) ([]string, error) {
-	n, buf, err := readIntoBuffer(conn)
-	if err != nil {
-		return nil, err
-	}
-	if n == 0 {
-		return []string{}, nil
-	}
-
-	cmd, err := parseCommand(buf)
-	if err != nil {
-		return nil, err
-	}
-
-	return cmd, nil
-}
-
-func write(conn net.Conn, message string) {
-	_, err := conn.Write([]byte(message))
-	if err != nil {
-		log.Println("Error writing to connection:", err.Error())
-		conn.Close()
-	}
-}
 
 // TODO: instead of hard-coding these as an if-else block, can use a map of string to function
 // TODO: probably want to move this function to a different file eventually (specifically for executing the Redis commands once they've been parsed)
@@ -70,7 +11,6 @@ func write(conn net.Conn, message string) {
 // and then have those route to other functions based on the command arguments provided
 func executeCommand(command []string, conn net.Conn) {
 	// TODO: need to propagate commands to all replicas (if this is a master)
-	// TODO: if this is a replica, it should not send responses back to the master after receiving commands
 	switch strings.ToLower(command[0]) {
 	case "command":
 		switch strings.ToLower(command[1]) {

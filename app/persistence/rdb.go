@@ -1,4 +1,4 @@
-package main
+package persistence
 
 import (
 	"bufio"
@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/shashjar/redis-in-go/app/store"
 )
 
 var RDB_DIR string
@@ -17,7 +19,7 @@ const DEFAULT_RDB_FILENAME = "dump.rdb"
 
 // TODO: uses a custom RDB format instead of the actual RDB binary file format - maybe implement this later. Refer to https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/
 // & https://rdb.fnordig.de/file_format.html
-func persistFromRDB(filePath string) {
+func PersistFromRDB(filePath string) {
 	lines, err := readFile(filePath)
 	if err != nil {
 		log.Println("Unable to persist from RDB file into Redis server:", err.Error())
@@ -26,9 +28,9 @@ func persistFromRDB(filePath string) {
 	processRDBKeyValuePairs(lines)
 }
 
-func dumpToRDB() error {
+func DumpToRDB() error {
 	filepath := "." + RDB_DIR + "/" + RDB_FILENAME
-	rdbBytes := getRDBBytes()
+	rdbBytes := GetRDBBytes()
 
 	file, err := os.Create(filepath)
 	if err != nil {
@@ -45,21 +47,21 @@ func dumpToRDB() error {
 	return nil
 }
 
-func getRDBBytes() []byte {
-	numKeyValuePairs := len(REDIS_STORE.data)
+func GetRDBBytes() []byte {
+	numKeyValuePairs := len(store.REDIS_STORE.Data)
 	var bytes []byte
 
 	bytes = append(bytes, []byte(strconv.Itoa(numKeyValuePairs)+"\n\n")...)
-	for key, value := range REDIS_STORE.data {
+	for key, value := range store.REDIS_STORE.Data {
 		if value.IsExpired() {
-			REDIS_STORE.DeleteKey(key)
+			store.REDIS_STORE.DeleteKey(key)
 			continue
 		}
 
 		bytes = append(bytes, []byte(key+"\n")...)
-		bytes = append(bytes, []byte(value.value+"\n")...)
+		bytes = append(bytes, []byte(value.Value+"\n")...)
 		if value.HasExpiration() {
-			bytes = append(bytes, []byte(strconv.Itoa(int(value.expiration.Unix()))+"\n")...)
+			bytes = append(bytes, []byte(strconv.Itoa(int(value.Expiration.Unix()))+"\n")...)
 		}
 		bytes = append(bytes, []byte("\n")...)
 	}
@@ -122,7 +124,7 @@ func processRDBKeyValuePairs(lines []string) {
 			expiresAt = time.Unix(int64(unixExpirationTimestamp), 0)
 		}
 
-		REDIS_STORE.Set(key, value, expiresAt)
+		store.REDIS_STORE.Set(key, value, expiresAt)
 	}
 }
 

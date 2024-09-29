@@ -5,21 +5,15 @@ import (
 	"log"
 	"net"
 	"os"
-	"strings"
+
+	"github.com/shashjar/redis-in-go/app/commands"
+	"github.com/shashjar/redis-in-go/app/persistence"
+	"github.com/shashjar/redis-in-go/app/replication"
+	"github.com/shashjar/redis-in-go/app/store"
 )
 
 const NETWORK string = "tcp"
 const ADDRESS string = "0.0.0.0"
-
-var SERVER_CONFIG = ServerConfig{
-	port:                    "6379",
-	isReplica:               false,
-	masterHost:              "",
-	masterPort:              "",
-	masterReplicationID:     "",
-	masterReplicationOffset: 0,
-	replicas:                []net.Conn{},
-}
 
 func configureLogger() {
 	log.SetFlags(0)
@@ -28,26 +22,20 @@ func configureLogger() {
 func parseCommandLineArguments() {
 	portPtr := flag.String("port", "6379", "Port number on which to run Redis server")
 	replicaOfPtr := flag.String("replicaof", "", "Indicates whether this Redis server should assume the 'replica' role")
-	rdbDirPtr := flag.String("dir", DEFAULT_RDB_DIR, "Directory in which to store RDB file")
-	rdbFilenamePtr := flag.String("dbfilename", DEFAULT_RDB_FILENAME, "Filename for RDB file")
+	rdbDirPtr := flag.String("dir", persistence.DEFAULT_RDB_DIR, "Directory in which to store RDB file")
+	rdbFilenamePtr := flag.String("dbfilename", persistence.DEFAULT_RDB_FILENAME, "Filename for RDB file")
 
 	flag.Parse()
 
-	SERVER_CONFIG.port = *portPtr
-	if len(*replicaOfPtr) > 0 {
-		SERVER_CONFIG.isReplica = true
-		replicaOfInfo := strings.Split(*replicaOfPtr, " ")
-		SERVER_CONFIG.masterHost = replicaOfInfo[0]
-		SERVER_CONFIG.masterPort = replicaOfInfo[1]
-	}
-	RDB_DIR = *rdbDirPtr
-	RDB_FILENAME = *rdbFilenamePtr
+	store.UpdateServerConfig(portPtr, replicaOfPtr)
+	persistence.RDB_DIR = *rdbDirPtr
+	persistence.RDB_FILENAME = *rdbFilenamePtr
 }
 
 func runServer() {
 	log.Println("Running server...")
 
-	l, err := net.Listen(NETWORK, ADDRESS+":"+SERVER_CONFIG.port)
+	l, err := net.Listen(NETWORK, ADDRESS+":"+store.SERVER_CONFIG.Port)
 	if err != nil {
 		log.Println("Failed to bind to port 6379:", err.Error())
 		os.Exit(1)
@@ -61,7 +49,7 @@ func runServer() {
 			continue
 		}
 
-		go handleConnection(conn)
+		go commands.HandleConnection(conn)
 	}
 }
 
@@ -69,7 +57,7 @@ func runServer() {
 func main() {
 	configureLogger()
 	parseCommandLineArguments()
-	initializeReplication()
-	persistFromRDB("." + RDB_DIR + "/" + RDB_FILENAME)
+	replication.InitializeReplication()
+	persistence.PersistFromRDB("." + persistence.RDB_DIR + "/" + persistence.RDB_FILENAME)
 	runServer()
 }
