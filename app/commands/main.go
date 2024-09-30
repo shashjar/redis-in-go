@@ -23,6 +23,8 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 		replconfHandler(conn, command)
 	case "psync":
 		psync(conn)
+	case "wait":
+		wait(conn, command)
 	case "save":
 		save(conn)
 	case "ping":
