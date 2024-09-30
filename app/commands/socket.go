@@ -16,30 +16,13 @@ func HandleConnection(conn net.Conn) {
 		log.Println("Read command:", command, err)
 		if err != nil {
 			log.Println("Error reading command from connection", err.Error())
-			return
 		}
 
 		if len(command) > 0 {
-			executeCommand(command, conn)
+			executeCommand(command, len(buf), conn)
 			replication.PropagateCommand(command[0], buf)
 		}
 	}
-}
-
-func readIntoBuffer(conn net.Conn) (int, []byte, error) {
-	buf := make([]byte, 128)
-	n, err := conn.Read(buf)
-	if err != nil {
-		return n, nil, err
-	}
-
-	if n == 0 {
-		return 0, []byte{}, nil
-	}
-
-	buf = buf[:n]
-
-	return n, buf, nil
 }
 
 func readCommand(conn net.Conn) ([]string, []byte, error) {
@@ -59,6 +42,22 @@ func readCommand(conn net.Conn) ([]string, []byte, error) {
 	return cmd, buf, nil
 }
 
+func readIntoBuffer(conn net.Conn) (int, []byte, error) {
+	buf := make([]byte, 128)
+	n, err := conn.Read(buf)
+	if err != nil {
+		return n, nil, err
+	}
+
+	if n == 0 {
+		return 0, []byte{}, nil
+	}
+
+	buf = buf[:n]
+
+	return n, buf, nil
+}
+
 // Writes the provided message to the provided connection, but only if this server is not a replica, since
 // replicas should not send responses back to the master after receiving propagated commands.
 func write(conn net.Conn, message string) {
@@ -67,7 +66,6 @@ func write(conn net.Conn, message string) {
 	}
 }
 
-// TODO: delete this function once done testing replication
 func alwaysWrite(conn net.Conn, message string) {
 	_, err := conn.Write([]byte(message))
 	if err != nil {

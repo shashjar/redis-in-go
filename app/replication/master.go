@@ -33,6 +33,7 @@ func PropagateCommand(commandName string, commandBytes []byte) {
 					log.Println("Error propagating command to replica:", err.Error())
 				}
 			}
+			SERVER_CONFIG.MasterReplicationOffset += len(commandBytes)
 		}
 	}
 }

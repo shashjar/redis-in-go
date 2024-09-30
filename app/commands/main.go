@@ -6,11 +6,12 @@ import (
 	"strings"
 
 	"github.com/shashjar/redis-in-go/app/protocol"
+	"github.com/shashjar/redis-in-go/app/replication"
 )
 
 // TODO: instead of hard-coding these as an if-else block, can use a map of string to function
 // and then have those route to other functions based on the command arguments provided
-func executeCommand(command []string, conn net.Conn) {
+func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 	switch strings.ToLower(command[0]) {
 	case "command":
 		commandHandler(conn, command)
@@ -19,7 +20,7 @@ func executeCommand(command []string, conn net.Conn) {
 	case "info":
 		infoHandler(conn, command)
 	case "replconf":
-		replconf(conn)
+		replconfHandler(conn, command)
 	case "psync":
 		psync(conn)
 	case "save":
@@ -39,6 +40,8 @@ func executeCommand(command []string, conn net.Conn) {
 	default:
 		unknownCommand(conn, command)
 	}
+
+	replication.UpdateReplicationOffsetOnReplica(numCommandBytes)
 }
 
 func unknownCommand(conn net.Conn, command []string) {

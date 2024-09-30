@@ -12,6 +12,12 @@ import (
 
 const NETWORK string = "tcp"
 
+func UpdateReplicationOffsetOnReplica(numCommandBytes int) {
+	if SERVER_CONFIG.IsReplica {
+		SERVER_CONFIG.MasterReplicationOffset += numCommandBytes
+	}
+}
+
 // Sends the replication handshake from the replica to the master.
 func replicaHandshake() net.Conn {
 	conn, err := net.Dial(NETWORK, SERVER_CONFIG.MasterHost+":"+SERVER_CONFIG.MasterPort)
