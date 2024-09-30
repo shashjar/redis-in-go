@@ -52,10 +52,10 @@ func GetRDBBytes() []byte {
 	numKeyValuePairs := len(data)
 	var bytes []byte
 
-	bytes = append(bytes, []byte(strconv.Itoa(numKeyValuePairs)+"\n\n")...)
 	for key, value := range data {
 		if value.IsExpired() {
 			store.DeleteKey(key)
+			numKeyValuePairs -= 1
 			continue
 		}
 
@@ -68,6 +68,7 @@ func GetRDBBytes() []byte {
 	}
 	bytes = bytes[:len(bytes)-1]
 
+	bytes = append([]byte(strconv.Itoa(numKeyValuePairs)+"\n\n"), bytes...)
 	return bytes
 }
 
