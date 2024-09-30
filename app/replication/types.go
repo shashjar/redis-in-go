@@ -10,5 +10,15 @@ type ServerConfig struct {
 	MasterPort              string
 	MasterReplicationID     string
 	MasterReplicationOffset int
-	Replicas                []net.Conn
+	Replicas                []*Replica
+}
+
+// Represents a replica Redis server
+type Replica struct {
+	Conn                              net.Conn
+	LastAcknowledgedReplicationOffset int
+}
+
+func (replica *Replica) ID() string {
+	return replica.Conn.RemoteAddr().String()
 }

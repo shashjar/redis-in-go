@@ -13,12 +13,9 @@ func HandleConnection(conn net.Conn) {
 	log.Println("Handling connection")
 	for {
 		command, buf, err := readCommand(conn)
-		log.Println("Read command:", command, err)
-		if err != nil {
-			log.Println("Error reading command from connection", err.Error())
-		}
 
 		if len(command) > 0 {
+			log.Println("Read command:", command, err)
 			executeCommand(command, len(buf), conn)
 			replication.PropagateCommand(command[0], buf)
 		}
@@ -72,4 +69,5 @@ func alwaysWrite(conn net.Conn, message string) {
 		log.Println("Error writing to connection:", err.Error())
 		conn.Close()
 	}
+	log.Println("Wrote:", message)
 }

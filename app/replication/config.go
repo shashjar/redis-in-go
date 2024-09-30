@@ -1,7 +1,6 @@
 package replication
 
 import (
-	"net"
 	"strings"
 )
 
@@ -12,7 +11,7 @@ var SERVER_CONFIG = ServerConfig{
 	MasterPort:              "",
 	MasterReplicationID:     "",
 	MasterReplicationOffset: 0,
-	Replicas:                []net.Conn{},
+	Replicas:                []*Replica{},
 }
 
 func UpdateServerConfig(portPtr *string, replicaOfPtr *string) {
