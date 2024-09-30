@@ -14,5 +14,6 @@ func psync(conn net.Conn) {
 	response := fmt.Sprintf("FULLRESYNC %s %d", replication.SERVER_CONFIG.MasterReplicationID, replication.SERVER_CONFIG.MasterReplicationOffset)
 	write(conn, protocol.ToSimpleString(response))
 	time.Sleep(500 * time.Millisecond)
+	replication.SERVER_CONFIG.Replicas = append(replication.SERVER_CONFIG.Replicas, conn)
 	replication.ExecuteFullResync(conn)
 }

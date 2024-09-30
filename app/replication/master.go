@@ -3,6 +3,7 @@ package replication
 import (
 	"log"
 	"net"
+	"strings"
 
 	"github.com/shashjar/redis-in-go/app/persistence"
 )
@@ -24,7 +25,7 @@ func ExecuteFullResync(conn net.Conn) {
 
 func PropagateCommand(commandName string, commandBytes []byte) {
 	if !SERVER_CONFIG.IsReplica {
-		_, ok := COMMANDS_TO_PROPAGATE[commandName]
+		_, ok := COMMANDS_TO_PROPAGATE[strings.ToLower(commandName)]
 		if ok {
 			for _, replicaConn := range SERVER_CONFIG.Replicas {
 				_, err := replicaConn.Write(commandBytes)

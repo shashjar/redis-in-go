@@ -63,10 +63,15 @@ func readCommand(conn net.Conn) ([]string, []byte, error) {
 // replicas should not send responses back to the master after receiving propagated commands.
 func write(conn net.Conn, message string) {
 	if !replication.SERVER_CONFIG.IsReplica {
-		_, err := conn.Write([]byte(message))
-		if err != nil {
-			log.Println("Error writing to connection:", err.Error())
-			conn.Close()
-		}
+		alwaysWrite(conn, message)
+	}
+}
+
+// TODO: delete this function once done testing replication
+func alwaysWrite(conn net.Conn, message string) {
+	_, err := conn.Write([]byte(message))
+	if err != nil {
+		log.Println("Error writing to connection:", err.Error())
+		conn.Close()
 	}
 }

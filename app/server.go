@@ -36,7 +36,7 @@ func runServer() {
 
 	l, err := net.Listen(NETWORK, ADDRESS+":"+replication.SERVER_CONFIG.Port)
 	if err != nil {
-		log.Println("Failed to bind to port 6379:", err.Error())
+		log.Printf("Failed to bind to port %s: %s\n", replication.SERVER_CONFIG.Port, err.Error())
 		os.Exit(1)
 	}
 	defer l.Close()
@@ -56,7 +56,16 @@ func runServer() {
 func main() {
 	configureLogger()
 	parseCommandLineArguments()
-	replication.InitializeReplication()
+
+	connWithMaster := replication.InitializeReplication()
+
 	persistence.PersistFromRDB("." + persistence.RDB_DIR + "/" + persistence.RDB_FILENAME)
-	runServer()
+
+	if !replication.SERVER_CONFIG.IsReplica {
+		runServer()
+	} else {
+		if connWithMaster != nil {
+			commands.HandleConnection(connWithMaster)
+		}
+	}
 }

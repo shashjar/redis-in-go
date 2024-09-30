@@ -13,7 +13,7 @@ import (
 const NETWORK string = "tcp"
 
 // Sends the replication handshake from the replica to the master.
-func replicaHandshake() {
+func replicaHandshake() net.Conn {
 	conn, err := net.Dial(NETWORK, SERVER_CONFIG.MasterHost+":"+SERVER_CONFIG.MasterPort)
 	if err != nil {
 		log.Println("Failed to connect to master from replica:", err.Error())
@@ -26,6 +26,8 @@ func replicaHandshake() {
 	psync(conn)
 
 	readRDBFileFromMaster(conn)
+
+	return conn
 }
 
 func pingMasterServer(conn net.Conn) {
