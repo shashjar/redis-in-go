@@ -3,10 +3,25 @@ package commands
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/shashjar/redis-in-go/app/protocol"
 	"github.com/shashjar/redis-in-go/app/replication"
 )
+
+// Handler for an INFO command
+func infoHandler(conn net.Conn, command []string) {
+	if len(command) < 2 {
+		invalidCommand(conn, command)
+	}
+
+	switch strings.ToLower(command[1]) {
+	case "replication":
+		infoReplication(conn)
+	default:
+		invalidCommand(conn, command)
+	}
+}
 
 // INFO REPLICATION command
 func infoReplication(conn net.Conn) {

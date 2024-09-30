@@ -9,31 +9,15 @@ import (
 )
 
 // TODO: instead of hard-coding these as an if-else block, can use a map of string to function
-// TODO: server can currently error out when accessing command[1] if that wasn't provided - maybe create separate functions as handlers for the top-level commands
 // and then have those route to other functions based on the command arguments provided
 func executeCommand(command []string, conn net.Conn) {
 	switch strings.ToLower(command[0]) {
 	case "command":
-		switch strings.ToLower(command[1]) {
-		case "docs":
-			commandDocs(conn)
-		default:
-			invalidCommand(conn, command)
-		}
+		commandHandler(conn, command)
 	case "config":
-		switch strings.ToLower(command[1]) {
-		case "get":
-			configGet(conn, command)
-		default:
-			invalidCommand(conn, command)
-		}
+		configHandler(conn, command)
 	case "info":
-		switch strings.ToLower(command[1]) {
-		case "replication":
-			infoReplication(conn)
-		default:
-			invalidCommand(conn, command)
-		}
+		infoHandler(conn, command)
 	case "replconf":
 		replconf(conn)
 	case "psync":

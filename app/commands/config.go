@@ -2,10 +2,25 @@ package commands
 
 import (
 	"net"
+	"strings"
 
 	"github.com/shashjar/redis-in-go/app/persistence"
 	"github.com/shashjar/redis-in-go/app/protocol"
 )
+
+// Handler for a CONFIG command
+func configHandler(conn net.Conn, command []string) {
+	if len(command) < 2 {
+		invalidCommand(conn, command)
+	}
+
+	switch strings.ToLower(command[1]) {
+	case "get":
+		configGet(conn, command)
+	default:
+		invalidCommand(conn, command)
+	}
+}
 
 // CONFIG GET command
 func configGet(conn net.Conn, command []string) {
