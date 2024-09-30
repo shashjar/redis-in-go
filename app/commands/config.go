@@ -12,6 +12,7 @@ import (
 func configHandler(conn net.Conn, command []string) {
 	if len(command) < 2 {
 		invalidCommand(conn, command)
+		return
 	}
 
 	switch strings.ToLower(command[1]) {
