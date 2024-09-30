@@ -26,18 +26,6 @@ func HandleConnection(conn net.Conn) {
 	}
 }
 
-// Writes the provided message to the provided connection, but only if this server is not a replica, since
-// replicas should not send responses back to the master after receiving propagated commands.
-func write(conn net.Conn, message string) {
-	if !replication.SERVER_CONFIG.IsReplica {
-		_, err := conn.Write([]byte(message))
-		if err != nil {
-			log.Println("Error writing to connection:", err.Error())
-			conn.Close()
-		}
-	}
-}
-
 func readIntoBuffer(conn net.Conn) (int, []byte, error) {
 	buf := make([]byte, 128)
 	n, err := conn.Read(buf)
@@ -69,4 +57,16 @@ func readCommand(conn net.Conn) ([]string, []byte, error) {
 	}
 
 	return cmd, buf, nil
+}
+
+// Writes the provided message to the provided connection, but only if this server is not a replica, since
+// replicas should not send responses back to the master after receiving propagated commands.
+func write(conn net.Conn, message string) {
+	if !replication.SERVER_CONFIG.IsReplica {
+		_, err := conn.Write([]byte(message))
+		if err != nil {
+			log.Println("Error writing to connection:", err.Error())
+			conn.Close()
+		}
+	}
 }
