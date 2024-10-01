@@ -36,11 +36,11 @@ func DeleteKey(key string) bool {
 	return REDIS_STORE.deleteKey(key)
 }
 
-func XAdd(streamKey string, entryID string, keys []string, values []string) (bool, string) {
-	ok, errorResponse := REDIS_STORE.xadd(streamKey, entryID, keys, values)
+func XAdd(streamKey string, entryID string, keys []string, values []string) (bool, string, string) {
+	ok, createdEntryID, errorResponse := REDIS_STORE.xadd(streamKey, entryID, keys, values)
 	if !ok {
-		return false, errorResponse
+		return false, "", errorResponse
 	}
 
-	return true, ""
+	return true, createdEntryID, ""
 }

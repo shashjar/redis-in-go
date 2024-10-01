@@ -26,9 +26,9 @@ func xadd(conn net.Conn, command []string) {
 		values = append(values, command[i])
 	}
 
-	ok, errorResponse := store.XAdd(streamKey, entryID, keys, values)
+	ok, createdEntryID, errorResponse := store.XAdd(streamKey, entryID, keys, values)
 	if ok {
-		write(conn, protocol.ToBulkString(entryID))
+		write(conn, protocol.ToBulkString(createdEntryID))
 	} else {
 		write(conn, protocol.ToSimpleError(errorResponse))
 	}

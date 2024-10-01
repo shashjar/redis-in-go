@@ -45,26 +45,12 @@ func (kvs *KeyValueStore) deleteKey(key string) bool {
 	return ok
 }
 
-func (kvs *KeyValueStore) xadd(streamKey string, entryID string, keys []string, values []string) (bool, string) {
+func (kvs *KeyValueStore) xadd(streamKey string, entryID string, keys []string, values []string) (bool, string, string) {
 	kv, ok := kvs.get(streamKey)
 	if !ok || kv.Type != "stream" {
-		stream := Stream{Entries: []StreamEntry{}}
-		ok, errorResponse := stream.validEntryID(entryID)
-		if !ok {
-			return false, errorResponse
-		}
-
-		stream.addEntry(entryID, keys, values)
-		kvs.data[streamKey] = KeyValue{Value: &stream, Type: "stream"}
+		return createStream(streamKey, entryID, keys, values, kvs)
 	} else {
 		stream := kv.Value.(*Stream)
-		ok, errorResponse := stream.validEntryID(entryID)
-		if !ok {
-			return false, errorResponse
-		}
-
-		stream.addEntry(entryID, keys, values)
+		return addEntryToStream(stream, entryID, keys, values)
 	}
-
-	return true, ""
 }
