@@ -3,7 +3,8 @@ package store
 import "time"
 
 type KeyValue struct {
-	Value      string
+	Value      interface{}
+	Type       string
 	Expiration time.Time
 }
 

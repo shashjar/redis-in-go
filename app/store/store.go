@@ -13,29 +13,28 @@ type KeyValueStore struct {
 // TODO: currently this only does passive expiration (an expired key is deleted only
 // after a client attempts to access it). Implement active expiration as a challenge:
 // https://redis.io/docs/latest/commands/expire/#how-redis-expires-keys
-func (kvs *KeyValueStore) get(key string) (string, bool) {
+func (kvs *KeyValueStore) get(key string) (KeyValue, bool) {
 	kvs.mu.RLock()
 	defer kvs.mu.RUnlock()
 
-	item, ok := kvs.data[key]
-
+	kv, ok := kvs.data[key]
 	if !ok {
-		return "", false
+		return kv, false
 	}
 
-	if item.IsExpired() {
+	if kv.IsExpired() {
 		kvs.deleteKey(key)
-		return "", false
+		return kv, false
 	}
 
-	return item.Value, true
+	return kv, true
 }
 
-func (kvs *KeyValueStore) set(key string, value string, expiration time.Time) {
+func (kvs *KeyValueStore) setString(key string, value string, expiration time.Time) {
 	kvs.mu.Lock()
 	defer kvs.mu.Unlock()
 
-	kvs.data[key] = KeyValue{Value: value, Expiration: expiration}
+	kvs.data[key] = KeyValue{Value: value, Type: "string", Expiration: expiration}
 }
 
 // Deletes the provided key from the store. Is a no-op if the key does not exist in the store.
@@ -44,4 +43,28 @@ func (kvs *KeyValueStore) deleteKey(key string) bool {
 	_, ok := kvs.data[key]
 	delete(kvs.data, key)
 	return ok
+}
+
+func (kvs *KeyValueStore) xadd(streamKey string, entryID string, keys []string, values []string) (bool, string) {
+	kv, ok := kvs.get(streamKey)
+	if !ok || kv.Type != "stream" {
+		stream := Stream{Entries: []StreamEntry{}}
+		ok, errorResponse := stream.validEntryID(entryID)
+		if !ok {
+			return false, errorResponse
+		}
+
+		stream.addEntry(entryID, keys, values)
+		kvs.data[streamKey] = KeyValue{Value: &stream, Type: "stream"}
+	} else {
+		stream := kv.Value.(*Stream)
+		ok, errorResponse := stream.validEntryID(entryID)
+		if !ok {
+			return false, errorResponse
+		}
+
+		stream.addEntry(entryID, keys, values)
+	}
+
+	return true, ""
 }
