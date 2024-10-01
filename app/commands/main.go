@@ -31,6 +31,8 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 		ping(conn)
 	case "echo":
 		echo(conn, command)
+	case "type":
+		typeCommand(conn, command)
 	case "get":
 		get(conn, command)
 	case "set":
@@ -39,6 +41,8 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 		del(conn, command)
 	case "keys":
 		keys(conn, command)
+	case "xadd":
+		xadd(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}

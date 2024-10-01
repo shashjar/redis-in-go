@@ -49,22 +49,26 @@ func DumpToRDB() error {
 
 func GetRDBBytes() []byte {
 	data := store.Data()
-	numKeyValuePairs := len(data)
+	numKeyValuePairs := 0
 	var bytes []byte
 
 	for key, value := range data {
-		if value.IsExpired() {
-			store.DeleteKey(key)
-			numKeyValuePairs -= 1
-			continue
-		}
+		// TODO: this only puts string KV pairs in the RDB file, not streams
+		if value.Type == "string" {
+			if value.IsExpired() {
+				store.DeleteKey(key)
+				continue
+			}
 
-		bytes = append(bytes, []byte(key+"\n")...)
-		bytes = append(bytes, []byte(value.Value+"\n")...)
-		if value.HasExpiration() {
-			bytes = append(bytes, []byte(strconv.Itoa(int(value.Expiration.Unix()))+"\n")...)
+			bytes = append(bytes, []byte(key+"\n")...)
+			bytes = append(bytes, []byte(value.Value.(string)+"\n")...)
+			if value.HasExpiration() {
+				bytes = append(bytes, []byte(strconv.Itoa(int(value.Expiration.Unix()))+"\n")...)
+			}
+			bytes = append(bytes, []byte("\n")...)
+
+			numKeyValuePairs += 1
 		}
-		bytes = append(bytes, []byte("\n")...)
 	}
 	bytes = bytes[:len(bytes)-1]
 
