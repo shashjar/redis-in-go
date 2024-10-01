@@ -54,3 +54,13 @@ func (kvs *KeyValueStore) xadd(streamKey string, entryID string, keys []string, 
 		return addEntryToStream(stream, entryID, keys, values)
 	}
 }
+
+func (kvs *KeyValueStore) xrange(streamKey string, startMillisecondsTime int, startSequenceNumber int, endMillisecondsTime int, endSequenceNumber int) (bool, []StreamEntry, string) {
+	kv, ok := kvs.get(streamKey)
+	if !ok || kv.Type != "stream" {
+		return false, nil, "ERR stream with key provided to XRANGE command not found"
+	}
+
+	stream := kv.Value.(*Stream)
+	return true, stream.getEntriesInRange(startMillisecondsTime, startSequenceNumber, endMillisecondsTime, endSequenceNumber), ""
+}

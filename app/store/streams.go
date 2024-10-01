@@ -78,6 +78,31 @@ func (stream *Stream) generateEntryIDSequenceNumber(millisecondsTime string) str
 	}
 }
 
+func (stream *Stream) getEntriesInRange(startMillisecondsTime int, startSequenceNumber int, endMillisecondsTime int, endSequenceNumber int) []StreamEntry {
+	var entries []StreamEntry
+	for _, entry := range stream.Entries {
+		inRange := false
+		_, entryMillisecondsTime, entrySequenceNumber, _ := splitEntryID(entry.ID)
+		if entryMillisecondsTime == startMillisecondsTime {
+			if entrySequenceNumber >= startSequenceNumber {
+				inRange = true
+			}
+		} else if entryMillisecondsTime == endMillisecondsTime {
+			if entrySequenceNumber <= endSequenceNumber {
+				inRange = true
+			}
+		} else if entryMillisecondsTime > startMillisecondsTime && entryMillisecondsTime < endMillisecondsTime {
+			inRange = true
+		}
+
+		if inRange {
+			entries = append(entries, entry)
+		}
+	}
+
+	return entries
+}
+
 func splitEntryID(entryID string) (bool, int, int, string) {
 	parts := strings.Split(entryID, "-")
 	if len(parts) != 2 {

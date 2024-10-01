@@ -43,6 +43,8 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 		keys(conn, command)
 	case "xadd":
 		xadd(conn, command)
+	case "xrange":
+		xrange(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}
