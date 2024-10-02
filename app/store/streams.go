@@ -78,11 +78,11 @@ func (stream *Stream) generateEntryIDSequenceNumber(millisecondsTime string) str
 	}
 }
 
-func (stream *Stream) getEntriesInRange(startMillisecondsTime int, startSequenceNumber int, endMillisecondsTime int, endSequenceNumber int) []StreamEntry {
+func (stream *Stream) getEntriesInRange(startMSTime int, startSeqNum int, endMSTime int, endSeqNum int, exclusive bool) []StreamEntry {
 	var entries []StreamEntry
 	for _, entry := range stream.Entries {
 		_, entryMillisecondsTime, entrySequenceNumber, _ := splitEntryID(entry.ID)
-		if isEntryInRange(entryMillisecondsTime, entrySequenceNumber, startMillisecondsTime, startSequenceNumber, endMillisecondsTime, endSequenceNumber) {
+		if isEntryInRange(entryMillisecondsTime, entrySequenceNumber, startMSTime, startSeqNum, endMSTime, endSeqNum, exclusive) {
 			entries = append(entries, entry)
 		}
 	}
@@ -90,16 +90,20 @@ func (stream *Stream) getEntriesInRange(startMillisecondsTime int, startSequence
 	return entries
 }
 
-func isEntryInRange(entryMillisecondsTime int, entrySequenceNumber int, startMillisecondsTime int, startSequenceNumber int, endMillisecondsTime int, endSequenceNumber int) bool {
-	if entryMillisecondsTime < startMillisecondsTime || entryMillisecondsTime > endMillisecondsTime {
+func isEntryInRange(entryMSTime int, entrySeqNum int, startMSTime int, startSeqNum int, endMSTime int, endSeqNum int, exclusive bool) bool {
+	if entryMSTime < startMSTime || entryMSTime > endMSTime {
 		return false
 	}
 
-	if entryMillisecondsTime == startMillisecondsTime && entrySequenceNumber < startSequenceNumber {
+	if entryMSTime == startMSTime && entrySeqNum < startSeqNum {
 		return false
 	}
 
-	if entryMillisecondsTime == endMillisecondsTime && entrySequenceNumber > endSequenceNumber {
+	if entryMSTime == endMSTime && entrySeqNum > endSeqNum {
+		return false
+	}
+
+	if exclusive && ((entryMSTime == startMSTime && entrySeqNum == startSeqNum) || (entryMSTime == endMSTime && entrySeqNum == endSeqNum)) {
 		return false
 	}
 

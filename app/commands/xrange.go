@@ -19,18 +19,18 @@ func xrange(conn net.Conn, command []string) {
 	}
 
 	streamKey := command[1]
-	ok, startMillisecondsTime, startSequenceNumber, errorResponse := getEntryIDParts(command[2], true)
+	ok, startMSTime, startSeqNum, errorResponse := getEntryIDParts(command[2], true)
 	if !ok {
 		write(conn, protocol.ToSimpleError(errorResponse))
 		return
 	}
-	ok, endMillisecondsTime, endSequenceNumber, errorResponse := getEntryIDParts(command[3], false)
+	ok, endMSTime, endSeqNum, errorResponse := getEntryIDParts(command[3], false)
 	if !ok {
 		write(conn, protocol.ToSimpleError(errorResponse))
 		return
 	}
 
-	ok, entries, errorResponse := store.XRange(streamKey, startMillisecondsTime, startSequenceNumber, endMillisecondsTime, endSequenceNumber)
+	ok, entries, errorResponse := store.XRange(streamKey, startMSTime, startSeqNum, endMSTime, endSeqNum)
 	if !ok {
 		write(conn, protocol.ToSimpleError(errorResponse))
 		return
@@ -67,7 +67,7 @@ func getEntryIDParts(entryID string, isStart bool) (bool, int, int, string) {
 	if len(parts) == 1 {
 		millisecondsTime, err := strconv.Atoi(parts[0])
 		if err != nil {
-			return false, 0, 0, "ERR invalid millisecondsTime parameter for XRANGE command"
+			return false, 0, 0, "ERR invalid millisecondsTime parameter"
 		}
 		if isStart {
 			return true, millisecondsTime, 0, ""
@@ -77,14 +77,14 @@ func getEntryIDParts(entryID string, isStart bool) (bool, int, int, string) {
 	} else if len(parts) == 2 {
 		millisecondsTime, err := strconv.Atoi(parts[0])
 		if err != nil {
-			return false, 0, 0, "ERR invalid millisecondsTime parameter for XRANGE command"
+			return false, 0, 0, "ERR invalid millisecondsTime parameter"
 		}
 		sequenceNumber, err := strconv.Atoi(parts[1])
 		if err != nil {
-			return false, 0, 0, "ERR invalid sequenceNumber parameter for XRANGE command"
+			return false, 0, 0, "ERR invalid sequenceNumber parameter"
 		}
 		return true, millisecondsTime, sequenceNumber, ""
 	} else {
-		return false, 0, 0, "ERR invalid ID provided to XRANGE command"
+		return false, 0, 0, "ERR invalid ID provided"
 	}
 }
