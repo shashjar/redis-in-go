@@ -45,8 +45,17 @@ func XAdd(streamKey string, entryID string, keys []string, values []string) (boo
 	return true, createdEntryID, ""
 }
 
-func XRange(streamKey string, startMillisecondsTime int, startSequenceNumber int, endMillisecondsTime int, endSequenceNumber int) (bool, []StreamEntry, string) {
-	ok, entries, errorResponse := REDIS_STORE.xrange(streamKey, startMillisecondsTime, startSequenceNumber, endMillisecondsTime, endSequenceNumber)
+func XRange(streamKey string, startMSTime int, startSeqNum int, endMSTime int, endSeqNum int) (bool, []StreamEntry, string) {
+	ok, entries, errorResponse := REDIS_STORE.xrange(streamKey, startMSTime, startSeqNum, endMSTime, endSeqNum)
+	if !ok {
+		return false, nil, errorResponse
+	}
+
+	return true, entries, ""
+}
+
+func XRead(streamKey string, startMSTime int, startSeqNum int) (bool, []StreamEntry, string) {
+	ok, entries, errorResponse := REDIS_STORE.xread(streamKey, startMSTime, startSeqNum)
 	if !ok {
 		return false, nil, errorResponse
 	}
