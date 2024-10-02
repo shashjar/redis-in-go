@@ -55,6 +55,14 @@ func xrange(conn net.Conn, command []string) {
 }
 
 func getEntryIDParts(entryID string, isStart bool) (bool, int, int, string) {
+	if isStart && entryID == "-" {
+		return true, 0, 0, ""
+	}
+
+	if !isStart && entryID == "+" {
+		return true, math.MaxInt, math.MaxInt, ""
+	}
+
 	parts := strings.Split(entryID, "-")
 	if len(parts) == 1 {
 		millisecondsTime, err := strconv.Atoi(parts[0])
