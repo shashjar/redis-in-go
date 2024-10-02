@@ -11,7 +11,7 @@ import (
 
 // XREAD command
 func xread(conn net.Conn, command []string) {
-	if len(command) != 4 {
+	if len(command) < 4 || len(command)%2 != 0 {
 		write(conn, protocol.ToSimpleError("ERR wrong number of arguments for 'xread' command"))
 		return
 	}
@@ -21,33 +21,40 @@ func xread(conn net.Conn, command []string) {
 		return
 	}
 
-	streamKey := command[2]
-	ok, startMSTime, startSeqNum, errorResponse := getEntryIDParts(command[3], true)
-	if !ok {
-		write(conn, protocol.ToSimpleError(errorResponse))
-		return
-	}
+	numStreams := (len(command) - 2) / 2
+	response := fmt.Sprintf("%s%d\r\n", protocol.ARRAY, numStreams)
 
-	ok, entries, errorResponse := store.XRead(streamKey, startMSTime, startSeqNum)
-	if !ok {
-		write(conn, protocol.ToSimpleError(errorResponse))
-		return
-	}
-
-	var entriesEncoded []string
-	for _, entry := range entries {
-		entryIDBulkString := protocol.ToBulkString(entry.ID)
-		var kvsArray []string
-		for k, v := range entry.KVPairs {
-			kvsArray = append(kvsArray, k)
-			kvsArray = append(kvsArray, v)
+	for i := range numStreams {
+		streamKey := command[2+i]
+		ok, startMSTime, startSeqNum, errorResponse := getEntryIDParts(command[2+i+numStreams], true)
+		if !ok {
+			write(conn, protocol.ToSimpleError(errorResponse))
+			return
 		}
-		kvsArrayEncoded := protocol.ToArray(kvsArray)
-		entryEncoded := fmt.Sprintf("%s2\r\n%s%s", protocol.ARRAY, entryIDBulkString, kvsArrayEncoded)
-		entriesEncoded = append(entriesEncoded, entryEncoded)
+
+		ok, entries, errorResponse := store.XRead(streamKey, startMSTime, startSeqNum)
+		if !ok {
+			write(conn, protocol.ToSimpleError(errorResponse))
+			return
+		}
+
+		streamEncoded := fmt.Sprintf("%s2\r\n%s%s%d\r\n", protocol.ARRAY, protocol.ToBulkString(streamKey), protocol.ARRAY, len(entries))
+		var entriesEncoded []string
+		for _, entry := range entries {
+			entryIDBulkString := protocol.ToBulkString(entry.ID)
+			var kvsArray []string
+			for k, v := range entry.KVPairs {
+				kvsArray = append(kvsArray, k)
+				kvsArray = append(kvsArray, v)
+			}
+			kvsArrayEncoded := protocol.ToArray(kvsArray)
+			entryEncoded := fmt.Sprintf("%s2\r\n%s%s", protocol.ARRAY, entryIDBulkString, kvsArrayEncoded)
+			entriesEncoded = append(entriesEncoded, entryEncoded)
+		}
+
+		streamEncoded = streamEncoded + strings.Join(entriesEncoded, "")
+		response += streamEncoded
 	}
 
-	response := strings.Join(entriesEncoded, "")
-	response = fmt.Sprintf("%s1\r\n%s2\r\n%s%s%d\r\n", protocol.ARRAY, protocol.ARRAY, protocol.ToBulkString(streamKey), protocol.ARRAY, len(entries)) + response
 	write(conn, response)
 }
