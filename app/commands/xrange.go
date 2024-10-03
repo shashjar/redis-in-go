@@ -19,18 +19,18 @@ func xrange(conn net.Conn, command []string) {
 	}
 
 	streamKey := command[1]
-	ok, startMSTime, startSeqNum, errorResponse := getEntryIDParts(command[2], true)
+	startMSTime, startSeqNum, errorResponse, ok := getEntryIDParts(command[2], true)
 	if !ok {
 		write(conn, protocol.ToSimpleError(errorResponse))
 		return
 	}
-	ok, endMSTime, endSeqNum, errorResponse := getEntryIDParts(command[3], false)
+	endMSTime, endSeqNum, errorResponse, ok := getEntryIDParts(command[3], false)
 	if !ok {
 		write(conn, protocol.ToSimpleError(errorResponse))
 		return
 	}
 
-	ok, entries, errorResponse := store.XRange(streamKey, startMSTime, startSeqNum, endMSTime, endSeqNum)
+	entries, errorResponse, ok := store.XRange(streamKey, startMSTime, startSeqNum, endMSTime, endSeqNum)
 	if !ok {
 		write(conn, protocol.ToSimpleError(errorResponse))
 		return
@@ -54,37 +54,37 @@ func xrange(conn net.Conn, command []string) {
 	write(conn, response)
 }
 
-func getEntryIDParts(entryID string, isStart bool) (bool, int, int, string) {
+func getEntryIDParts(entryID string, isStart bool) (int, int, string, bool) {
 	if isStart && (entryID == "-" || entryID == "$") {
-		return true, 0, 0, ""
+		return 0, 0, "", true
 	}
 
 	if !isStart && entryID == "+" {
-		return true, math.MaxInt, math.MaxInt, ""
+		return math.MaxInt, math.MaxInt, "", true
 	}
 
 	parts := strings.Split(entryID, "-")
 	if len(parts) == 1 {
 		millisecondsTime, err := strconv.Atoi(parts[0])
 		if err != nil {
-			return false, 0, 0, "ERR invalid millisecondsTime parameter"
+			return 0, 0, "ERR invalid millisecondsTime parameter", false
 		}
 		if isStart {
-			return true, millisecondsTime, 0, ""
+			return millisecondsTime, 0, "", true
 		} else {
-			return true, millisecondsTime, math.MaxInt, ""
+			return millisecondsTime, math.MaxInt, "", true
 		}
 	} else if len(parts) == 2 {
 		millisecondsTime, err := strconv.Atoi(parts[0])
 		if err != nil {
-			return false, 0, 0, "ERR invalid millisecondsTime parameter"
+			return 0, 0, "ERR invalid millisecondsTime parameter", false
 		}
 		sequenceNumber, err := strconv.Atoi(parts[1])
 		if err != nil {
-			return false, 0, 0, "ERR invalid sequenceNumber parameter"
+			return 0, 0, "ERR invalid sequenceNumber parameter", false
 		}
-		return true, millisecondsTime, sequenceNumber, ""
+		return millisecondsTime, sequenceNumber, "", true
 	} else {
-		return false, 0, 0, "ERR invalid ID provided"
+		return 0, 0, "ERR invalid ID provided", false
 	}
 }

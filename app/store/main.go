@@ -36,29 +36,29 @@ func DeleteKey(key string) bool {
 	return REDIS_STORE.deleteKey(key)
 }
 
-func XAdd(streamKey string, entryID string, keys []string, values []string) (bool, string, string) {
-	ok, createdEntryID, errorResponse := REDIS_STORE.xadd(streamKey, entryID, keys, values)
+func XAdd(streamKey string, entryID string, keys []string, values []string) (string, string, bool) {
+	createdEntryID, errorResponse, ok := REDIS_STORE.xadd(streamKey, entryID, keys, values)
 	if !ok {
-		return false, "", errorResponse
+		return "", errorResponse, false
 	}
 
-	return true, createdEntryID, ""
+	return createdEntryID, "", true
 }
 
-func XRange(streamKey string, startMSTime int, startSeqNum int, endMSTime int, endSeqNum int) (bool, []StreamEntry, string) {
-	ok, entries, errorResponse := REDIS_STORE.xrange(streamKey, startMSTime, startSeqNum, endMSTime, endSeqNum)
+func XRange(streamKey string, startMSTime int, startSeqNum int, endMSTime int, endSeqNum int) ([]StreamEntry, string, bool) {
+	entries, errorResponse, ok := REDIS_STORE.xrange(streamKey, startMSTime, startSeqNum, endMSTime, endSeqNum)
 	if !ok {
-		return false, nil, errorResponse
+		return nil, errorResponse, false
 	}
 
-	return true, entries, ""
+	return entries, "", true
 }
 
-func XRead(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerThanTime time.Time) (bool, []StreamEntry, string) {
-	ok, entries, errorResponse := REDIS_STORE.xread(streamKey, startMSTime, startSeqNum, filterEntryNewerThanTime)
+func XRead(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerThanTime time.Time) ([]StreamEntry, string, bool) {
+	entries, errorResponse, ok := REDIS_STORE.xread(streamKey, startMSTime, startSeqNum, filterEntryNewerThanTime)
 	if !ok {
-		return false, nil, errorResponse
+		return nil, errorResponse, false
 	}
 
-	return true, entries, ""
+	return entries, "", true
 }

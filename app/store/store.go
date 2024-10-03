@@ -46,7 +46,7 @@ func (kvs *KeyValueStore) deleteKey(key string) bool {
 	return ok
 }
 
-func (kvs *KeyValueStore) xadd(streamKey string, entryID string, keys []string, values []string) (bool, string, string) {
+func (kvs *KeyValueStore) xadd(streamKey string, entryID string, keys []string, values []string) (string, string, bool) {
 	kv, ok := kvs.get(streamKey)
 	if !ok || kv.Type != "stream" {
 		return createStream(streamKey, entryID, keys, values, kvs)
@@ -56,22 +56,22 @@ func (kvs *KeyValueStore) xadd(streamKey string, entryID string, keys []string, 
 	}
 }
 
-func (kvs *KeyValueStore) xrange(streamKey string, startMSTime int, startSeqNum int, endMSTime int, endSeqNum int) (bool, []StreamEntry, string) {
+func (kvs *KeyValueStore) xrange(streamKey string, startMSTime int, startSeqNum int, endMSTime int, endSeqNum int) ([]StreamEntry, string, bool) {
 	kv, ok := kvs.get(streamKey)
 	if !ok || kv.Type != "stream" {
-		return false, nil, "ERR stream with key provided to XRANGE command not found"
+		return nil, "ERR stream with key provided to XRANGE command not found", false
 	}
 
 	stream := kv.Value.(*Stream)
-	return true, stream.getEntriesInRange(startMSTime, startSeqNum, endMSTime, endSeqNum, time.Time{}, false), ""
+	return stream.getEntriesInRange(startMSTime, startSeqNum, endMSTime, endSeqNum, time.Time{}, false), "", true
 }
 
-func (kvs *KeyValueStore) xread(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerThanTime time.Time) (bool, []StreamEntry, string) {
+func (kvs *KeyValueStore) xread(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerThanTime time.Time) ([]StreamEntry, string, bool) {
 	kv, ok := kvs.get(streamKey)
 	if !ok || kv.Type != "stream" {
-		return false, nil, "ERR stream with key provided to XREAD command not found"
+		return nil, "ERR stream with key provided to XREAD command not found", false
 	}
 
 	stream := kv.Value.(*Stream)
-	return true, stream.getEntriesInRange(startMSTime, startSeqNum, math.MaxInt, math.MaxInt, filterEntryNewerThanTime, true), ""
+	return stream.getEntriesInRange(startMSTime, startSeqNum, math.MaxInt, math.MaxInt, filterEntryNewerThanTime, true), "", true
 }

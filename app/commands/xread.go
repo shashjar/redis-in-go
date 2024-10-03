@@ -43,13 +43,13 @@ func xread(conn net.Conn, command []string) {
 
 	for i := range numStreams {
 		streamKey := command[numPrefixParameters+i]
-		ok, startMSTime, startSeqNum, errorResponse := getEntryIDParts(command[numPrefixParameters+i+numStreams], true)
+		startMSTime, startSeqNum, errorResponse, ok := getEntryIDParts(command[numPrefixParameters+i+numStreams], true)
 		if !ok {
 			write(conn, protocol.ToSimpleError(errorResponse))
 			return
 		}
 
-		ok, entries, errorResponse := store.XRead(streamKey, startMSTime, startSeqNum, filterEntryNewerThanTime)
+		entries, errorResponse, ok := store.XRead(streamKey, startMSTime, startSeqNum, filterEntryNewerThanTime)
 		if !ok {
 			write(conn, protocol.ToSimpleError(errorResponse))
 			return
