@@ -41,6 +41,8 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 		del(conn, command)
 	case "keys":
 		keys(conn, command)
+	case "incr":
+		incr(conn, command)
 	case "xadd":
 		xadd(conn, command)
 	case "xrange":

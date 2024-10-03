@@ -1,6 +1,7 @@
 package store
 
 import (
+	"strconv"
 	"time"
 )
 
@@ -34,6 +35,28 @@ func Set(key string, value string, expiration time.Time) {
 
 func DeleteKey(key string) bool {
 	return REDIS_STORE.deleteKey(key)
+}
+
+func Incr(key string) (int, bool) {
+	kv, ok := REDIS_STORE.get(key)
+	if ok && kv.Type != "string" {
+		return 0, false
+	}
+
+	stringInt := ""
+	if ok {
+		stringInt = kv.Value.(string)
+	} else {
+		stringInt = "0"
+	}
+
+	num, err := strconv.Atoi(stringInt)
+	if err != nil {
+		return 0, false
+	}
+
+	Set(key, strconv.Itoa(num+1), time.Time{})
+	return num + 1, true
 }
 
 func XAdd(streamKey string, entryID string, keys []string, values []string) (string, string, bool) {
