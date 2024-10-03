@@ -63,15 +63,15 @@ func (kvs *KeyValueStore) xrange(streamKey string, startMSTime int, startSeqNum 
 	}
 
 	stream := kv.Value.(*Stream)
-	return true, stream.getEntriesInRange(startMSTime, startSeqNum, endMSTime, endSeqNum, false), ""
+	return true, stream.getEntriesInRange(startMSTime, startSeqNum, endMSTime, endSeqNum, time.Time{}, false), ""
 }
 
-func (kvs *KeyValueStore) xread(streamKey string, startMSTime int, startSeqNum int) (bool, []StreamEntry, string) {
+func (kvs *KeyValueStore) xread(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerThanTime time.Time) (bool, []StreamEntry, string) {
 	kv, ok := kvs.get(streamKey)
 	if !ok || kv.Type != "stream" {
 		return false, nil, "ERR stream with key provided to XREAD command not found"
 	}
 
 	stream := kv.Value.(*Stream)
-	return true, stream.getEntriesInRange(startMSTime, startSeqNum, math.MaxInt, math.MaxInt, true), ""
+	return true, stream.getEntriesInRange(startMSTime, startSeqNum, math.MaxInt, math.MaxInt, filterEntryNewerThanTime, true), ""
 }

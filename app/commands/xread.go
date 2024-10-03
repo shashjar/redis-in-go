@@ -3,7 +3,9 @@ package commands
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/shashjar/redis-in-go/app/protocol"
 	"github.com/shashjar/redis-in-go/app/store"
@@ -16,27 +18,43 @@ func xread(conn net.Conn, command []string) {
 		return
 	}
 
-	if command[1] != "streams" {
+	streamsIndex, numPrefixParameters, blockingTimeMS, filterEntryNewerThanTime := 1, 2, 0, time.Time{}
+	if command[1] == "block" {
+		streamsIndex, numPrefixParameters = 3, 4
+		blockForMS, err := strconv.Atoi(command[2])
+		if err != nil || blockForMS < 0 {
+			write(conn, protocol.ToSimpleError("ERR invalid blocking time provided for 'xread' command"))
+			return
+		}
+		blockingTimeMS = blockForMS
+		filterEntryNewerThanTime = time.Now()
+	}
+
+	if command[streamsIndex] != "streams" {
 		write(conn, protocol.ToSimpleError("ERR only able to read from streams with 'xread' command"))
 		return
 	}
 
-	numStreams := (len(command) - 2) / 2
+	time.Sleep(time.Duration(blockingTimeMS) * time.Millisecond)
+
+	numStreams := (len(command) - numPrefixParameters) / 2
 	response := fmt.Sprintf("%s%d\r\n", protocol.ARRAY, numStreams)
+	numTotalEntriesReturned := 0
 
 	for i := range numStreams {
-		streamKey := command[2+i]
-		ok, startMSTime, startSeqNum, errorResponse := getEntryIDParts(command[2+i+numStreams], true)
+		streamKey := command[numPrefixParameters+i]
+		ok, startMSTime, startSeqNum, errorResponse := getEntryIDParts(command[numPrefixParameters+i+numStreams], true)
 		if !ok {
 			write(conn, protocol.ToSimpleError(errorResponse))
 			return
 		}
 
-		ok, entries, errorResponse := store.XRead(streamKey, startMSTime, startSeqNum)
+		ok, entries, errorResponse := store.XRead(streamKey, startMSTime, startSeqNum, filterEntryNewerThanTime)
 		if !ok {
 			write(conn, protocol.ToSimpleError(errorResponse))
 			return
 		}
+		numTotalEntriesReturned += len(entries)
 
 		streamEncoded := fmt.Sprintf("%s2\r\n%s%s%d\r\n", protocol.ARRAY, protocol.ToBulkString(streamKey), protocol.ARRAY, len(entries))
 		var entriesEncoded []string
@@ -54,6 +72,11 @@ func xread(conn net.Conn, command []string) {
 
 		streamEncoded = streamEncoded + strings.Join(entriesEncoded, "")
 		response += streamEncoded
+	}
+
+	if numTotalEntriesReturned == 0 {
+		write(conn, protocol.ToNullBulkString())
+		return
 	}
 
 	write(conn, response)

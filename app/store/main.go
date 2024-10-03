@@ -54,8 +54,8 @@ func XRange(streamKey string, startMSTime int, startSeqNum int, endMSTime int, e
 	return true, entries, ""
 }
 
-func XRead(streamKey string, startMSTime int, startSeqNum int) (bool, []StreamEntry, string) {
-	ok, entries, errorResponse := REDIS_STORE.xread(streamKey, startMSTime, startSeqNum)
+func XRead(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerThanTime time.Time) (bool, []StreamEntry, string) {
+	ok, entries, errorResponse := REDIS_STORE.xread(streamKey, startMSTime, startSeqNum, filterEntryNewerThanTime)
 	if !ok {
 		return false, nil, errorResponse
 	}
