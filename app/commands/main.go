@@ -49,6 +49,8 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 		xrange(conn, command)
 	case "xread":
 		xread(conn, command)
+	case "multi":
+		multi(conn)
 	default:
 		unknownCommand(conn, command)
 	}
