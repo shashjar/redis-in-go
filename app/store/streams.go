@@ -11,8 +11,9 @@ type Stream struct {
 }
 
 type StreamEntry struct {
-	ID      string
-	KVPairs map[string]string
+	ID        string
+	CreatedAt time.Time
+	KVPairs   map[string]string
 }
 
 func (stream *Stream) addEntry(entryID string, keys []string, values []string) {
@@ -21,7 +22,7 @@ func (stream *Stream) addEntry(entryID string, keys []string, values []string) {
 		kvPairs[key] = values[i]
 	}
 
-	newEntry := StreamEntry{ID: entryID, KVPairs: kvPairs}
+	newEntry := StreamEntry{ID: entryID, CreatedAt: time.Now(), KVPairs: kvPairs}
 	stream.Entries = append(stream.Entries, newEntry)
 }
 
@@ -78,11 +79,11 @@ func (stream *Stream) generateEntryIDSequenceNumber(millisecondsTime string) str
 	}
 }
 
-func (stream *Stream) getEntriesInRange(startMSTime int, startSeqNum int, endMSTime int, endSeqNum int, exclusive bool) []StreamEntry {
+func (stream *Stream) getEntriesInRange(startMSTime int, startSeqNum int, endMSTime int, endSeqNum int, filterEntryNewerThanTime time.Time, exclusive bool) []StreamEntry {
 	var entries []StreamEntry
 	for _, entry := range stream.Entries {
 		_, entryMillisecondsTime, entrySequenceNumber, _ := splitEntryID(entry.ID)
-		if isEntryInRange(entryMillisecondsTime, entrySequenceNumber, startMSTime, startSeqNum, endMSTime, endSeqNum, exclusive) {
+		if isEntryInRange(entryMillisecondsTime, entrySequenceNumber, startMSTime, startSeqNum, endMSTime, endSeqNum, exclusive) && entry.CreatedAt.After(filterEntryNewerThanTime) {
 			entries = append(entries, entry)
 		}
 	}
