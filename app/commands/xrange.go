@@ -55,7 +55,7 @@ func xrange(conn net.Conn, command []string) {
 }
 
 func getEntryIDParts(entryID string, isStart bool) (bool, int, int, string) {
-	if isStart && entryID == "-" {
+	if isStart && (entryID == "-" || entryID == "$") {
 		return true, 0, 0, ""
 	}
 
