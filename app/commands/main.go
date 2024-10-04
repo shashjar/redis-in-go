@@ -13,6 +13,21 @@ import (
 // and then have those route to other functions based on the command arguments provided
 func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 	switch strings.ToLower(command[0]) {
+	case "multi":
+		multi(conn)
+		return
+	case "exec":
+		exec(conn)
+		return
+	}
+
+	transaction, ok := getOpenTransaction(conn)
+	if ok {
+		queueCommand(transaction, command, numCommandBytes, conn)
+		return
+	}
+
+	switch strings.ToLower(command[0]) {
 	case "command":
 		commandHandler(conn, command)
 	case "config":
@@ -49,10 +64,6 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 		xrange(conn, command)
 	case "xread":
 		xread(conn, command)
-	case "multi":
-		multi(conn)
-	case "exec":
-		exec(conn)
 	default:
 		unknownCommand(conn, command)
 	}
