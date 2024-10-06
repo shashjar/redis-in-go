@@ -19,6 +19,8 @@ const DEFAULT_RDB_FILENAME = "dump.rdb"
 
 // NOTE: for ease of implementation, uses a custom RDB format (see redis-data/example.rdb) instead of the official
 // RDB binary file format (https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/ + https://rdb.fnordig.de/file_format.html)
+
+// Persists the data stored in the RDB file at the given path into this running server's key-value store
 func PersistFromRDB(filePath string) {
 	lines, err := readFile(filePath)
 	if err != nil {
@@ -28,6 +30,7 @@ func PersistFromRDB(filePath string) {
 	processRDBKeyValuePairs(lines)
 }
 
+// Dumps the current state of this running server's key-value store to an RDB file that is saved to disk
 func DumpToRDB() error {
 	filepath := "." + RDB_DIR + "/" + RDB_FILENAME
 	rdbBytes := GetRDBBytes()
@@ -47,6 +50,7 @@ func DumpToRDB() error {
 	return nil
 }
 
+// Gets a byte slice representing the data that would be written to an RDB file
 // NOTE: only dumps KV pairs of type "string" into the RDB file (does not persist streams)
 func GetRDBBytes() []byte {
 	data := store.Data()

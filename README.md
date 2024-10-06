@@ -22,6 +22,8 @@ Support for transactions is mainly implemented in `commands/transactions.go` in 
 
 ## RDB Persistence
 
+[Redis Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/) is implemented here using RDB files. The `persistence` package is responsible for being able to dump the current state of the key-value store to an RDB file that is saved to disk, and parse an existing RDB file on disk to persist state back into a running server's key-value store.
+
 ## Replication
 
 ## Running the Server
