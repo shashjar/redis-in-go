@@ -10,13 +10,13 @@ import (
 func multi(conn net.Conn) {
 	connectionID := conn.RemoteAddr().String()
 
-	_, ok := getOpenTransaction(conn)
-	if ok {
-		write(conn, protocol.ToSimpleError("ERR open transaction already exists for this client"))
+	_, open := getOpenTransaction(conn)
+	if open {
+		alwaysWrite(conn, protocol.ToSimpleError("ERR open transaction already exists for this client"))
 		return
 	}
 
-	transaction := Transaction{commands: [][]string{}, numCommandBytes: []int{}}
+	transaction := Transaction{commands: [][]string{}, numCommandBytes: []int{}, responses: []string{}}
 	ACTIVE_TRANSACTIONS[connectionID] = &transaction
-	write(conn, protocol.ToSimpleString("OK"))
+	alwaysWrite(conn, protocol.ToSimpleString("OK"))
 }
