@@ -71,6 +71,9 @@ func handleTransaction(command []string, numCommandBytes int, conn net.Conn) boo
 	case "exec":
 		exec(conn)
 		return true
+	case "discard":
+		discard(conn)
+		return true
 	}
 
 	transaction, open := getOpenTransaction(conn)
