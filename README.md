@@ -1,6 +1,6 @@
 # redis-in-go
 
-An implementation of a Redis server using Go. Inspired by [CodeCrafters Redis challenge](https://app.codecrafters.io/courses/redis/overview). This Redis server is capable of serving basic key-value store commands & allows for creating and reading Redis streams. In addition, this codebase implements RDB persistence, allows for spinning up replica servers and propagating commands, and supports Redis transactions.
+An implementation of a Redis server using Go. Inspired by the [CodeCrafters Redis challenge](https://app.codecrafters.io/courses/redis/overview). This Redis server is capable of serving basic key-value store commands & allows for creating and reading Redis streams. In addition, this codebase implements RDB persistence, allows for spinning up replica servers and propagating commands, and supports Redis transactions.
 
 ## Redis Serialization Protocol (RESP)
 
@@ -8,7 +8,7 @@ The `protocol` package contains a partial implementation of [RESP](https://redis
 
 ## Key-Value Store & Streams
 
-The core key-value store is implemented in the `store` package, providing an interface that allows a client to get, set, delete, and increment keys, in addition to functionality for creating, appending to, and reading from streams. This implementation relies on a Golang mapping from string (key value) to `KeyValue` struct, which is capable of storing either a `string` or `stream` value type. Store operations do rely on read & write locks on mutexes to minimize conflicts.
+The core key-value store is implemented in the `store` package, providing an interface that allows a client to get, set, delete, and increment keys, in addition to functionality for creating, appending to, and reading from streams. This implementation relies on a Golang mapping from string (key value) to `KeyValue` struct, which is capable of storing either a `string` or `stream` value type. Store operations rely on read & write locks on mutexes to minimize conflicts.
 
 See `store/streams.go` & [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/) for more information on the streams implementation.
 
@@ -30,7 +30,7 @@ Support for transactions is mainly implemented in `commands/transactions.go` in 
 
 ## Running the Server
 
-The `./run.sh` script is used to run the server. This will accept the following command-line arguments: `port`, `replicaof`, `dir`, & `dbfilename`. `port` is the port number on which to run the Redis server. `replicaof` should be provided with a string value "<MASTER_HOST> <MASTER_PORT>" indicating the master which this server is replicating. `dir` & `dbfilename` together provide the path of an RDB file from which to persist data on startup, and to save data to when dumping an RDB file to disk (see `persistence` above for more details). The below are valid ways to run a Redis server:
+The `./run.sh` script is used to run the server. The program entrypoint accepts the following command-line arguments: `port`, `replicaof`, `dir`, & `dbfilename`. `port` is the port number on which to run the Redis server. `replicaof` should be provided with a string value "<MASTER_HOST> <MASTER_PORT>" indicating the master which this server is replicating. `dir` & `dbfilename` together provide the path of an RDB file from which to persist data on startup, and to save data to when dumping an RDB file to disk (see `persistence` above for more details). The below are valid ways to run a Redis server:
 
 `./run.sh`
 
