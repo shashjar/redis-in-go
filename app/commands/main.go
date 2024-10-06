@@ -9,8 +9,6 @@ import (
 	"github.com/shashjar/redis-in-go/app/replication"
 )
 
-// TODO: instead of hard-coding these as an if-else block, can use a map of string to function
-// and then have those route to other functions based on the command arguments provided
 func executeCommand(command []string, numCommandBytes int, transactionExecuting bool, conn net.Conn) {
 	if !transactionExecuting {
 		commandHandled := handleTransaction(command, numCommandBytes, conn)

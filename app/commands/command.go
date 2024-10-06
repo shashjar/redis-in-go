@@ -20,8 +20,7 @@ func commandHandler(conn net.Conn, command []string) {
 	}
 }
 
-// TODO: returns an empty array to get redis-cli to initialize properly
-// COMMAND DOCS command
+// COMMAND DOCS command - returns an empty array to allow redis-cli to initialize properly
 func commandDocs(conn net.Conn) {
 	alwaysWrite(conn, "*0\r\n")
 }

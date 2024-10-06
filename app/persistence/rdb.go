@@ -17,8 +17,8 @@ var RDB_FILENAME string
 const DEFAULT_RDB_DIR = "/redis-data"
 const DEFAULT_RDB_FILENAME = "dump.rdb"
 
-// TODO: uses a custom RDB format instead of the actual RDB binary file format - maybe implement this later. Refer to https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/
-// & https://rdb.fnordig.de/file_format.html
+// NOTE: for ease of implementation, uses a custom RDB format (see redis-data/example.rdb) instead of the official
+// RDB binary file format (https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/ + https://rdb.fnordig.de/file_format.html)
 func PersistFromRDB(filePath string) {
 	lines, err := readFile(filePath)
 	if err != nil {
@@ -47,13 +47,13 @@ func DumpToRDB() error {
 	return nil
 }
 
+// NOTE: only dumps KV pairs of type "string" into the RDB file (does not persist streams)
 func GetRDBBytes() []byte {
 	data := store.Data()
 	numKeyValuePairs := 0
 	var bytes []byte
 
 	for key, value := range data {
-		// TODO: this only puts string KV pairs in the RDB file, not streams
 		if value.Type == "string" {
 			if value.IsExpired() {
 				store.DeleteKey(key)

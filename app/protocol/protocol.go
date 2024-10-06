@@ -1,6 +1,5 @@
 package protocol
 
-// TODO: finish implementing Redis protocol
 /**
  * Implementation of the Redis Serialization Protocol (RESP): https://redis.io/docs/latest/develop/reference/protocol-spec/
  */

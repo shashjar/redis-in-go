@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// NOTE: this key-value store currently supports only passive expiration (an expired key is deleted only after a client attempts to access it).
+// May add active expiration via period random sampling/testing in the future (https://redis.io/docs/latest/commands/expire/#how-redis-expires-keys).
+
 var REDIS_STORE = KeyValueStore{data: make(map[string]KeyValue)}
 
 func Data() map[string]KeyValue {
