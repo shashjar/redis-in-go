@@ -26,6 +26,8 @@ Support for transactions is mainly implemented in `commands/transactions.go` in 
 
 ## Replication
 
+[Redis Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/) is achieved by the `replication` package. Running a replica server causes the replication handshake to be triggered and for mutation commands to be propagated from the master to all replicas, with sync checking possible via the `REPLCONF GETACK` command.
+
 ## Running the Server
 
 TODO: include usage - the ./run.sh commands and options + testing with redis-cli

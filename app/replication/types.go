@@ -19,6 +19,7 @@ type Replica struct {
 	LastAcknowledgedReplicationOffset int
 }
 
+// Returns the ID for a replica server, generated based on its connection's remote address
 func (replica *Replica) ID() string {
 	return replica.Conn.RemoteAddr().String()
 }

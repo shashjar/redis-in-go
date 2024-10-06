@@ -9,9 +9,12 @@ import (
 	"github.com/shashjar/redis-in-go/app/protocol"
 )
 
+// Represents the set of Redis commands that should be propagated from the master server to replicas
 var COMMANDS_TO_PROPAGATE = map[string]struct{}{
-	"set": {},
-	"del": {},
+	"set":  {},
+	"del":  {},
+	"incr": {},
+	"xadd": {},
 }
 
 const NUM_GET_ACK_BYTES = 37
@@ -26,6 +29,7 @@ func ExecuteFullResync(conn net.Conn) {
 	}
 }
 
+// Propagates the given command from the master server to all existing replicas
 func PropagateCommand(commandName string, commandBytes []byte) {
 	if !SERVER_CONFIG.IsReplica {
 		_, ok := COMMANDS_TO_PROPAGATE[strings.ToLower(commandName)]
@@ -41,6 +45,7 @@ func PropagateCommand(commandName string, commandBytes []byte) {
 	}
 }
 
+// Sends the REPLCONF GETACK command to the replicas, intending to verify replication offsets
 func SendGetAckToReplicas() {
 	for _, replica := range SERVER_CONFIG.Replicas {
 		_, err := replica.Conn.Write([]byte(protocol.ToArray([]string{"REPLCONF", "GETACK", "*"})))
@@ -50,11 +55,12 @@ func SendGetAckToReplicas() {
 	}
 }
 
+// Adds the number of REPLCONF GETACK command bytes to the master's replication offset
 func AddGetAckBytesToMasterReplicationOffset() {
 	SERVER_CONFIG.MasterReplicationOffset += NUM_GET_ACK_BYTES
 }
 
-// Generates a replication ID for the master server.
+// Generates a replication ID for the master server
 func generateMasterReplicationID() string {
 	return "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
 }
