@@ -8,6 +8,7 @@ import (
 	"github.com/shashjar/redis-in-go/app/replication"
 )
 
+// Handles the provided connection as a client, looping over received data and parsing for Redis commands to execute
 func HandleConnection(conn net.Conn) {
 	defer conn.Close()
 	log.Println("Handling connection")

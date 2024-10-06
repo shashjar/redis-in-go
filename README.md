@@ -8,7 +8,21 @@ The `protocol` package contains a partial implementation of [RESP](https://redis
 
 ## Key-Value Store & Streams
 
-The core key-value store is implemented in the `store` package, providing an interface that allows a client to get, set, delete, and increment keys, in addition to functionality for creating, appending to, and reading from streams. This implementation relies on a Golang mapping from string (key value) to `KeyValue` struct, which is capable of storing either a `string` or `stream` value type. Store operations do rely on read & write locks on mutexes to minimize conflicts. See `store/streams.go` for more information on the streams implementation.
+The core key-value store is implemented in the `store` package, providing an interface that allows a client to get, set, delete, and increment keys, in addition to functionality for creating, appending to, and reading from streams. This implementation relies on a Golang mapping from string (key value) to `KeyValue` struct, which is capable of storing either a `string` or `stream` value type. Store operations do rely on read & write locks on mutexes to minimize conflicts.
+
+See `store/streams.go` & [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/) for more information on the streams implementation.
+
+## Command Execution
+
+The `commands` package contains primary implementations for Redis commands that are accepted by the server from clients. `commands/socket.go` is responsible for handling a client connection in a dedicated Goroutine, accepting any incoming data, parsing it for commands, and sending it off for execution. This execution occurs in `commands/main.go`, where the command name is read in order to direct the arguments to the appropriate command handler.
+
+## Transactions
+
+Support for transactions is mainly implemented in `commands/transactions.go` in the `commands` package. [Redis Transactions](https://redis.io/docs/latest/develop/interact/transactions/) allow clients to group the execution of multiple Redis commands into a single step.
+
+## RDB Persistence
+
+## Replication
 
 ## Running the Server
 

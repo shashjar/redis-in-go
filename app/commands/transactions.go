@@ -7,6 +7,7 @@ import (
 	"github.com/shashjar/redis-in-go/app/protocol"
 )
 
+// Represents a Redis transaction, a grouping of multiple commands to be executed together (sequentially)
 type Transaction struct {
 	commands        [][]string
 	numCommandBytes []int
