@@ -11,8 +11,6 @@ import (
 	"github.com/shashjar/redis-in-go/app/replication"
 )
 
-// TODO: add nicer documentation throughout code (purpose statements?) and update repo README
-
 const NETWORK string = "tcp"
 const ADDRESS string = "0.0.0.0"
 

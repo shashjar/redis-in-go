@@ -30,4 +30,11 @@ Support for transactions is mainly implemented in `commands/transactions.go` in 
 
 ## Running the Server
 
-TODO: include usage - the ./run.sh commands and options + testing with redis-cli
+The `./run.sh` script is used to run the server. This will accept the following command-line arguments: `port`, `replicaof`, `dir`, & `dbfilename`. `port` is the port number on which to run the Redis server. `replicaof` should be provided with a string value "<MASTER_HOST> <MASTER_PORT>" indicating the master which this server is replicating. `dir` & `dbfilename` together provide the path of an RDB file from which to persist data on startup, and to save data to when dumping an RDB file to disk (see `persistence` above for more details). The below are valid ways to run a Redis server:
+
+`./run.sh`
+`./run.sh --port 6380`
+`./run.sh --port 6380 --replicaof "localhost 6379"`
+`./run.sh --dir /redis-data --dbfilename dump.rdb`
+
+To spin up an official Redis server to compare/test responses & commands, `redis-server` can be used. To spin up one or more clients to connect to the server and run commands, `redis-cli` can be used.
