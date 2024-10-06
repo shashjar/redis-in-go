@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// Parses command bytes received from a client into a slice of string arguments
 func ParseCommand(b []byte) ([]string, error) {
 	var commandComponents []string
 
