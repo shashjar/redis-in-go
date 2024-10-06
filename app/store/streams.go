@@ -6,10 +6,12 @@ import (
 	"time"
 )
 
+// Represents a Redis stream, an ordered collection of entries consisting of key-value pairs
 type Stream struct {
 	Entries []StreamEntry
 }
 
+// Represents an individual stream entry, containing some number of key-value pairs
 type StreamEntry struct {
 	ID        string
 	CreatedAt time.Time

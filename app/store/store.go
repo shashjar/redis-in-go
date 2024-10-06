@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Represents a store of key-value pairs stored as a mapping, along with a mutex for read/write locking
 type KeyValueStore struct {
 	data map[string]KeyValue
 	mu   sync.RWMutex
