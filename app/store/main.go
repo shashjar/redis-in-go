@@ -8,6 +8,7 @@ import (
 // NOTE: this key-value store currently supports only passive expiration (an expired key is deleted only after a client attempts to access it).
 // May add active expiration via period random sampling/testing in the future (https://redis.io/docs/latest/commands/expire/#how-redis-expires-keys).
 
+// Maps string keys to the values they are associated with in the Redis store
 var REDIS_STORE = KeyValueStore{data: make(map[string]KeyValue)}
 
 // Retrieves the complete mapping of data currently in the key-value store
