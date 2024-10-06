@@ -11,20 +11,12 @@ import (
 
 // TODO: instead of hard-coding these as an if-else block, can use a map of string to function
 // and then have those route to other functions based on the command arguments provided
-func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
-	switch strings.ToLower(command[0]) {
-	case "multi":
-		multi(conn)
-		return
-	case "exec":
-		exec(conn)
-		return
-	}
-
-	transaction, ok := getOpenTransaction(conn)
-	if ok {
-		queueCommand(transaction, command, numCommandBytes, conn)
-		return
+func executeCommand(command []string, numCommandBytes int, transactionExecuting bool, conn net.Conn) {
+	if !transactionExecuting {
+		commandHandled := handleTransaction(command, numCommandBytes, conn)
+		if commandHandled {
+			return
+		}
 	}
 
 	switch strings.ToLower(command[0]) {
@@ -69,6 +61,25 @@ func executeCommand(command []string, numCommandBytes int, conn net.Conn) {
 	}
 
 	replication.UpdateReplicationOffsetOnReplica(numCommandBytes)
+}
+
+func handleTransaction(command []string, numCommandBytes int, conn net.Conn) bool {
+	switch strings.ToLower(command[0]) {
+	case "multi":
+		multi(conn)
+		return true
+	case "exec":
+		exec(conn)
+		return true
+	}
+
+	transaction, open := getOpenTransaction(conn)
+	if open {
+		queueCommand(transaction, command, numCommandBytes, conn)
+		return true
+	}
+
+	return false
 }
 
 func unknownCommand(conn net.Conn, command []string) {

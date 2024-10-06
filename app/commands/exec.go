@@ -10,14 +10,13 @@ import (
 func exec(conn net.Conn) {
 	connectionID := conn.RemoteAddr().String()
 
-	_, ok := getOpenTransaction(conn)
-	if !ok {
-		write(conn, protocol.ToSimpleError("ERR EXEC without MULTI"))
+	transaction, open := getOpenTransaction(conn)
+	if !open {
+		alwaysWrite(conn, protocol.ToSimpleError("ERR EXEC without MULTI"))
 		return
 	}
 
-	// TODO: execute commands in transaction and write the array of responses to the client
-	// transaction := *val
+	response := executeTransaction(transaction, conn)
 	delete(ACTIVE_TRANSACTIONS, connectionID)
-	write(conn, protocol.ToArray([]string{}))
+	alwaysWrite(conn, response)
 }
