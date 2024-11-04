@@ -2,6 +2,8 @@
 
 An implementation of a Redis server using Go. Inspired by the [CodeCrafters Redis challenge](https://app.codecrafters.io/courses/redis/overview). This Redis server is capable of serving basic key-value store commands & allows for creating and reading Redis streams. In addition, this codebase implements RDB persistence, allows for spinning up replica servers and propagating commands, and supports Redis transactions.
 
+![Redis Logo](./docs/assets/redis-logo.png)
+
 ## Redis Serialization Protocol (RESP)
 
 The `protocol` package contains a partial implementation of [RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) to allow for standardized communication between the Redis server and some arbitrary number of Redis clients. This extends to decoding (parsing data coming in from clients) & encoding (serializing server responses to send back to clients).
