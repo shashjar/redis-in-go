@@ -1,5 +1,7 @@
 [![Go 1.22](https://img.shields.io/badge/go-1.22-9cf.svg)](https://golang.org/dl/)
 
+making a small change to README.md
+
 # redis-in-go
 
 An implementation of a Redis server using Go. Inspired by the [CodeCrafters Redis challenge](https://app.codecrafters.io/courses/redis/overview). This Redis server is capable of serving basic key-value store commands & allows for creating and reading Redis streams. In addition, this codebase implements RDB persistence, allows for spinning up replica servers and propagating commands, and supports Redis transactions.
