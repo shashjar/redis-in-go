@@ -99,11 +99,13 @@ func XRead(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerT
 	return entries, "", true
 }
 
+// Appends the given elements to the end of the list associated with the given key,
+// creating that list if it does not exist
 func RPush(listKey string, elements []string) (int, string, bool) {
-	newListLength, errorResponse, ok := REDIS_STORE.rpush(listKey, elements)
-	if !ok {
-		return 0, errorResponse, false
-	}
+	return REDIS_STORE.rpush(listKey, elements)
+}
 
-	return newListLength, "", true
+// Returns the elements in the list associated with the given key, in the specified range
+func LRange(listKey string, startIndex int, stopIndex int) ([]string, string, bool) {
+	return REDIS_STORE.lrange(listKey, startIndex, stopIndex)
 }

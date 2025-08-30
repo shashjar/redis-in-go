@@ -17,3 +17,7 @@ func (list *List) appendElements(elements []string) int {
 	list.Entries = append(list.Entries, elements...)
 	return len(list.Entries)
 }
+
+func (list *List) getElementsInRange(startIndex int, stopIndex int) []string {
+	return list.Entries[startIndex : stopIndex+1]
+}

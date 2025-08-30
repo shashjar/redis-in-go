@@ -90,3 +90,15 @@ func (kvs *KeyValueStore) rpush(listKey string, elements []string) (int, string,
 	newListLength := list.appendElements(elements)
 	return newListLength, "", true
 }
+
+func (kvs *KeyValueStore) lrange(listKey string, startIndex int, stopIndex int) ([]string, string, bool) {
+	kv, ok := kvs.get(listKey)
+	if ok && kv.Type != "list" {
+		return []string{}, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return []string{}, "", true
+	}
+
+	list := kv.Value.(*List)
+	return list.getElementsInRange(startIndex, stopIndex), "", true
+}
