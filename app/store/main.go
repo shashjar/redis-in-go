@@ -121,3 +121,9 @@ func LRange(listKey string, startIndex int, stopIndex int) ([]string, string, bo
 func LLen(listKey string) (int, string, bool) {
 	return REDIS_STORE.llen(listKey)
 }
+
+// Removes and returns the first elements from the list associated with the given key,
+// considering that list as empty if the key does not exist
+func LPop(listKey string, popCount int) ([]string, string, bool) {
+	return REDIS_STORE.lpop(listKey, popCount)
+}

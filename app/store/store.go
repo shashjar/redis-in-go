@@ -131,3 +131,16 @@ func (kvs *KeyValueStore) llen(listKey string) (int, string, bool) {
 	list := kv.Value.(*List)
 	return len(list.Entries), "", true
 }
+
+func (kvs *KeyValueStore) lpop(listKey string, popCount int) ([]string, string, bool) {
+	kv, ok := kvs.get(listKey)
+	if ok && kv.Type != "list" {
+		return []string{}, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return []string{}, "", true
+	}
+
+	list := kv.Value.(*List)
+	poppedElements := list.popLeftElements(popCount)
+	return poppedElements, "", true
+}

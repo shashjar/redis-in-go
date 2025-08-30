@@ -7,6 +7,14 @@ type List struct {
 	Entries []string
 }
 
+func reverseSlice(s []string) []string {
+	result := make([]string, len(s))
+	for i, j := 0, len(s)-1; i <= j; i, j = i+1, j-1 {
+		result[i], result[j] = s[j], s[i]
+	}
+	return result
+}
+
 func createEmptyList(listKey string, kvs *KeyValueStore) *List {
 	list := &List{Entries: []string{}}
 	kvs.data[listKey] = KeyValue{Value: list, Type: "list"}
@@ -36,10 +44,15 @@ func (list *List) getElementsInRange(startIndex int, stopIndex int) []string {
 	return list.Entries[startIndex : stopIndex+1]
 }
 
-func reverseSlice(s []string) []string {
-	result := make([]string, len(s))
-	for i, j := 0, len(s)-1; i <= j; i, j = i+1, j-1 {
-		result[i], result[j] = s[j], s[i]
+func (list *List) popLeftElements(popCount int) []string {
+	length := len(list.Entries)
+	if popCount >= length {
+		poppedElements := list.Entries
+		list.Entries = []string{}
+		return poppedElements
 	}
-	return result
+
+	poppedElements := list.Entries[:popCount]
+	list.Entries = list.Entries[popCount:]
+	return poppedElements
 }
