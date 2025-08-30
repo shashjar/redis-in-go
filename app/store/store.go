@@ -73,3 +73,20 @@ func (kvs *KeyValueStore) xread(streamKey string, startMSTime int, startSeqNum i
 	stream := kv.Value.(*Stream)
 	return stream.getEntriesInRange(startMSTime, startSeqNum, math.MaxInt, math.MaxInt, filterEntryNewerThanTime, true), "", true
 }
+
+func (kvs *KeyValueStore) rpush(listKey string, elements []string) (int, string, bool) {
+	kv, ok := kvs.get(listKey)
+	if ok && kv.Type != "list" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	}
+
+	var list *List
+	if !ok {
+		list = createEmptyList(listKey, kvs)
+	} else {
+		list = kv.Value.(*List)
+	}
+
+	newListLength := list.appendElements(elements)
+	return newListLength, "", true
+}

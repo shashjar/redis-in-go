@@ -98,3 +98,12 @@ func XRead(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerT
 
 	return entries, "", true
 }
+
+func RPush(listKey string, elements []string) (int, string, bool) {
+	newListLength, errorResponse, ok := REDIS_STORE.rpush(listKey, elements)
+	if !ok {
+		return 0, errorResponse, false
+	}
+
+	return newListLength, "", true
+}
