@@ -91,6 +91,23 @@ func (kvs *KeyValueStore) rpush(listKey string, elements []string) (int, string,
 	return newListLength, "", true
 }
 
+func (kvs *KeyValueStore) lpush(listKey string, elements []string) (int, string, bool) {
+	kv, ok := kvs.get(listKey)
+	if ok && kv.Type != "list" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	}
+
+	var list *List
+	if !ok {
+		list = createEmptyList(listKey, kvs)
+	} else {
+		list = kv.Value.(*List)
+	}
+
+	newListLength := list.prependElements(reverseSlice(elements))
+	return newListLength, "", true
+}
+
 func (kvs *KeyValueStore) lrange(listKey string, startIndex int, stopIndex int) ([]string, string, bool) {
 	kv, ok := kvs.get(listKey)
 	if ok && kv.Type != "list" {

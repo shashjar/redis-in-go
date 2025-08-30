@@ -105,6 +105,12 @@ func RPush(listKey string, elements []string) (int, string, bool) {
 	return REDIS_STORE.rpush(listKey, elements)
 }
 
+// Inserts the given elements at the front d of the list associated with the given key,
+// creating that list if it does not exist
+func LPush(listKey string, elements []string) (int, string, bool) {
+	return REDIS_STORE.lpush(listKey, elements)
+}
+
 // Returns the elements in the list associated with the given key, in the specified range
 func LRange(listKey string, startIndex int, stopIndex int) ([]string, string, bool) {
 	return REDIS_STORE.lrange(listKey, startIndex, stopIndex)

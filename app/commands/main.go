@@ -56,6 +56,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		xread(conn, command)
 	case "rpush":
 		rpush(conn, command)
+	case "lpush":
+		lpush(conn, command)
 	case "lrange":
 		lrange(conn, command)
 	default:
