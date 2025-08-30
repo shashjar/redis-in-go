@@ -60,6 +60,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		lpush(conn, command)
 	case "lrange":
 		lrange(conn, command)
+	case "llen":
+		llen(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}

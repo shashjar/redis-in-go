@@ -115,3 +115,9 @@ func LPush(listKey string, elements []string) (int, string, bool) {
 func LRange(listKey string, startIndex int, stopIndex int) ([]string, string, bool) {
 	return REDIS_STORE.lrange(listKey, startIndex, stopIndex)
 }
+
+// Returns the length of the list associated with the given key, considering that list
+// as empty if the key does not exist
+func LLen(listKey string) (int, string, bool) {
+	return REDIS_STORE.llen(listKey)
+}

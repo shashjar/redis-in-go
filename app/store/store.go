@@ -119,3 +119,15 @@ func (kvs *KeyValueStore) lrange(listKey string, startIndex int, stopIndex int) 
 	list := kv.Value.(*List)
 	return list.getElementsInRange(startIndex, stopIndex), "", true
 }
+
+func (kvs *KeyValueStore) llen(listKey string) (int, string, bool) {
+	kv, ok := kvs.get(listKey)
+	if ok && kv.Type != "list" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return 0, "", true
+	}
+
+	list := kv.Value.(*List)
+	return len(list.Entries), "", true
+}
