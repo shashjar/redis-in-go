@@ -127,3 +127,9 @@ func LLen(listKey string) (int, string, bool) {
 func LPop(listKey string, popCount int) ([]string, string, bool) {
 	return REDIS_STORE.lpop(listKey, popCount)
 }
+
+// Removes and returns the first element from the first list among the given list keys that is not empty,
+// blocking for up to the specified timeout if necessary
+func BLPop(listKeys []string, timeoutSec int) (string, string, bool, string, bool) {
+	return REDIS_STORE.blpop(listKeys, timeoutSec)
+}

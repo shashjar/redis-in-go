@@ -64,6 +64,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		llen(conn, command)
 	case "lpop":
 		lpop(conn, command)
+	case "blpop":
+		blpop(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}

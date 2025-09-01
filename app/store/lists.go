@@ -7,6 +7,44 @@ type List struct {
 	Entries []string
 }
 
+var blpopWaiters = make(map[string][]chan string)
+
+func registerBlpopWaiter(listKeys []string, waitChan chan string) {
+	for _, listKey := range listKeys {
+		blpopWaiters[listKey] = append(blpopWaiters[listKey], waitChan)
+	}
+}
+
+func notifyBlpopWaiter(listKey string) {
+	waiters, ok := blpopWaiters[listKey]
+	if ok && len(waiters) > 0 {
+		waiter := waiters[0]
+		waiter <- listKey
+	}
+}
+
+func cleanUpBlpopWaiters(listKeys []string, waitChan chan string) {
+	close(waitChan)
+
+	for _, listKey := range listKeys {
+		waiters, ok := blpopWaiters[listKey]
+		if ok && len(waiters) > 0 {
+			newWaiters := make([]chan string, 0, len(waiters))
+			for _, waiter := range waiters {
+				if waiter != waitChan {
+					newWaiters = append(newWaiters, waiter)
+				}
+			}
+
+			if len(newWaiters) == 0 {
+				delete(blpopWaiters, listKey)
+			} else {
+				blpopWaiters[listKey] = newWaiters
+			}
+		}
+	}
+}
+
 func reverseSlice(s []string) []string {
 	result := make([]string, len(s))
 	for i, j := 0, len(s)-1; i <= j; i, j = i+1, j-1 {

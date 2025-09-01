@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -88,6 +89,7 @@ func (kvs *KeyValueStore) rpush(listKey string, elements []string) (int, string,
 	}
 
 	newListLength := list.appendElements(elements)
+	notifyBlpopWaiter(listKey)
 	return newListLength, "", true
 }
 
@@ -105,6 +107,7 @@ func (kvs *KeyValueStore) lpush(listKey string, elements []string) (int, string,
 	}
 
 	newListLength := list.prependElements(reverseSlice(elements))
+	notifyBlpopWaiter(listKey)
 	return newListLength, "", true
 }
 
@@ -143,4 +146,42 @@ func (kvs *KeyValueStore) lpop(listKey string, popCount int) ([]string, string, 
 	list := kv.Value.(*List)
 	poppedElements := list.popLeftElements(popCount)
 	return poppedElements, "", true
+}
+
+func (kvs *KeyValueStore) blpop(listKeys []string, timeoutSec int) (string, string, bool, string, bool) {
+	for _, listKey := range listKeys {
+		kv, ok := kvs.get(listKey)
+		if ok && kv.Type != "list" {
+			return "", "", false, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+		} else if ok {
+			list := kv.Value.(*List)
+			if len(list.Entries) > 0 {
+				poppedElements := list.popLeftElements(1)
+				return poppedElements[0], listKey, true, "", true
+			}
+		}
+	}
+
+	waitChan := make(chan string, 1)
+	registerBlpopWaiter(listKeys, waitChan)
+	defer cleanUpBlpopWaiters(listKeys, waitChan)
+
+	var timeoutChan <-chan time.Time
+	if timeoutSec > 0 {
+		timeoutChan = time.After(time.Duration(timeoutSec) * time.Second)
+	}
+
+	select {
+	case listKey := <-waitChan:
+		poppedElements, errorResponse, ok := kvs.lpop(listKey, 1)
+		if !ok {
+			return "", "", false, errorResponse, false
+		}
+		if len(poppedElements) != 1 {
+			panic(fmt.Sprintf("Expected 1 popped element, got %d", len(poppedElements)))
+		}
+		return poppedElements[0], listKey, true, "", true
+	case <-timeoutChan:
+		return "", "", false, "", true
+	}
 }
