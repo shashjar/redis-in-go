@@ -7,6 +7,8 @@ type List struct {
 	Entries []string
 }
 
+// Contains the channels which are waiting for an element to be added to a list
+// in order to fulfill a BLPOP command.
 var blpopWaiters = make(map[string][]chan string)
 
 func registerBlpopWaiter(listKeys []string, waitChan chan string) {

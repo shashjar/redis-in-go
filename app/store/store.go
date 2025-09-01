@@ -11,6 +11,7 @@ type KeyValueStore struct {
 	mu   sync.RWMutex
 }
 
+// Gets the information associated with the given key from the store, if it exists and is not expired.
 func (kvs *KeyValueStore) get(key string) (KeyValue, bool) {
 	kvs.mu.RLock()
 	defer kvs.mu.RUnlock()
@@ -28,6 +29,7 @@ func (kvs *KeyValueStore) get(key string) (KeyValue, bool) {
 	return kv, true
 }
 
+// Sets the string value associated with the given key in the store, with some expiration.
 func (kvs *KeyValueStore) setString(key string, value string, expiration time.Time) {
 	kvs.mu.Lock()
 	defer kvs.mu.Unlock()

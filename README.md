@@ -10,11 +10,18 @@ An implementation of a Redis server using Go. Inspired by the [CodeCrafters Redi
 
 The `protocol` package contains a partial implementation of [RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) to allow for standardized communication between the Redis server and some arbitrary number of Redis clients. This extends to decoding (parsing data coming in from clients) & encoding (serializing server responses to send back to clients).
 
-## Key-Value Store & Streams
+## Key-Value Store: Strings, Streams, & Lists
 
-The core key-value store is implemented in the `store` package, providing an interface that allows a client to get, set, delete, and increment keys, in addition to functionality for creating, appending to, and reading from streams. This implementation relies on a Golang mapping from string (key value) to `KeyValue` struct, which is capable of storing either a `string` or `stream` value type. Store operations rely on read & write locks on mutexes to minimize conflicts.
+The core key-value store is implemented in the `store` package, providing an interface that allows a client to:
+- Get, set, delete, and increment string keys
+- Create, append to, and read from streams
+- Create, add elements to, list elements of, remove elements from, and block retrieval on lists
+
+This key-value store implementation relies on a Golang mapping from string (key value) to `KeyValue` struct, which is capable of storing either a `string`, `stream`, or `list` value type. Store operations rely on read & write locks on mutexes to minimize conflicts.
 
 See `store/streams.go` & [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/) for more information on the streams implementation.
+
+See `store/lists.go` & [Redis Lists](https://redis.io/docs/latest/develop/data-types/lists/) for more information on the lists implementation.
 
 ## Command Execution
 
