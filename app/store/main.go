@@ -1,6 +1,8 @@
 package store
 
 import (
+	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
@@ -71,65 +73,155 @@ func Incr(key string) (int, bool) {
 
 // Creates an entry in the given stream
 func XAdd(streamKey string, entryID string, keys []string, values []string) (string, string, bool) {
-	createdEntryID, errorResponse, ok := REDIS_STORE.xadd(streamKey, entryID, keys, values)
-	if !ok {
-		return "", errorResponse, false
+	kv, ok := REDIS_STORE.get(streamKey)
+	if !ok || kv.Type != "stream" {
+		return createStream(streamKey, entryID, keys, values, &REDIS_STORE)
+	} else {
+		stream := kv.Value.(*Stream)
+		return addEntryToStream(stream, entryID, keys, values)
 	}
-
-	return createdEntryID, "", true
 }
 
 // Retrieves a range of entries in the given stream
 func XRange(streamKey string, startMSTime int, startSeqNum int, endMSTime int, endSeqNum int) ([]StreamEntry, string, bool) {
-	entries, errorResponse, ok := REDIS_STORE.xrange(streamKey, startMSTime, startSeqNum, endMSTime, endSeqNum)
-	if !ok {
-		return nil, errorResponse, false
+	kv, ok := REDIS_STORE.get(streamKey)
+	if !ok || kv.Type != "stream" {
+		return nil, "ERR stream with key provided to XRANGE command not found", false
 	}
 
-	return entries, "", true
+	stream := kv.Value.(*Stream)
+	return stream.getEntriesInRange(startMSTime, startSeqNum, endMSTime, endSeqNum, time.Time{}, false), "", true
 }
 
 // Reads entries later than some start index in the given stream
 func XRead(streamKey string, startMSTime int, startSeqNum int, filterEntryNewerThanTime time.Time) ([]StreamEntry, string, bool) {
-	entries, errorResponse, ok := REDIS_STORE.xread(streamKey, startMSTime, startSeqNum, filterEntryNewerThanTime)
-	if !ok {
-		return nil, errorResponse, false
+	kv, ok := REDIS_STORE.get(streamKey)
+	if !ok || kv.Type != "stream" {
+		return nil, "ERR stream with key provided to XREAD command not found", false
 	}
 
-	return entries, "", true
+	stream := kv.Value.(*Stream)
+	return stream.getEntriesInRange(startMSTime, startSeqNum, math.MaxInt, math.MaxInt, filterEntryNewerThanTime, true), "", true
 }
 
 // Appends the given elements to the end of the list associated with the given key,
 // creating that list if it does not exist
 func RPush(listKey string, elements []string) (int, string, bool) {
-	return REDIS_STORE.rpush(listKey, elements)
+	kv, ok := REDIS_STORE.get(listKey)
+	if ok && kv.Type != "list" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	}
+
+	var list *List
+	if !ok {
+		list = createEmptyList(listKey, &REDIS_STORE)
+	} else {
+		list = kv.Value.(*List)
+	}
+
+	newListLength := list.appendElements(elements)
+	notifyBlpopWaiter(listKey)
+	return newListLength, "", true
 }
 
 // Inserts the given elements at the front d of the list associated with the given key,
 // creating that list if it does not exist
 func LPush(listKey string, elements []string) (int, string, bool) {
-	return REDIS_STORE.lpush(listKey, elements)
+	kv, ok := REDIS_STORE.get(listKey)
+	if ok && kv.Type != "list" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	}
+
+	var list *List
+	if !ok {
+		list = createEmptyList(listKey, &REDIS_STORE)
+	} else {
+		list = kv.Value.(*List)
+	}
+
+	newListLength := list.prependElements(reverseSlice(elements))
+	notifyBlpopWaiter(listKey)
+	return newListLength, "", true
 }
 
 // Returns the elements in the list associated with the given key, in the specified range
 func LRange(listKey string, startIndex int, stopIndex int) ([]string, string, bool) {
-	return REDIS_STORE.lrange(listKey, startIndex, stopIndex)
+	kv, ok := REDIS_STORE.get(listKey)
+	if ok && kv.Type != "list" {
+		return []string{}, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return []string{}, "", true
+	}
+
+	list := kv.Value.(*List)
+	return list.getElementsInRange(startIndex, stopIndex), "", true
 }
 
 // Returns the length of the list associated with the given key, considering that list
 // as empty if the key does not exist
 func LLen(listKey string) (int, string, bool) {
-	return REDIS_STORE.llen(listKey)
+	kv, ok := REDIS_STORE.get(listKey)
+	if ok && kv.Type != "list" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return 0, "", true
+	}
+
+	list := kv.Value.(*List)
+	return len(list.Entries), "", true
 }
 
 // Removes and returns the first elements from the list associated with the given key,
 // considering that list as empty if the key does not exist
 func LPop(listKey string, popCount int) ([]string, string, bool) {
-	return REDIS_STORE.lpop(listKey, popCount)
+	kv, ok := REDIS_STORE.get(listKey)
+	if ok && kv.Type != "list" {
+		return []string{}, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return []string{}, "", true
+	}
+
+	list := kv.Value.(*List)
+	poppedElements := list.popLeftElements(popCount)
+	return poppedElements, "", true
 }
 
 // Removes and returns the first element from the first list among the given list keys that is not empty,
 // blocking for up to the specified timeout if necessary
 func BLPop(listKeys []string, timeoutSec int) (string, string, bool, string, bool) {
-	return REDIS_STORE.blpop(listKeys, timeoutSec)
+	for _, listKey := range listKeys {
+		kv, ok := REDIS_STORE.get(listKey)
+		if ok && kv.Type != "list" {
+			return "", "", false, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+		} else if ok {
+			list := kv.Value.(*List)
+			if len(list.Entries) > 0 {
+				poppedElements := list.popLeftElements(1)
+				return poppedElements[0], listKey, true, "", true
+			}
+		}
+	}
+
+	waitChan := make(chan string, 1)
+	registerBlpopWaiter(listKeys, waitChan)
+	defer cleanUpBlpopWaiters(listKeys, waitChan)
+
+	var timeoutChan <-chan time.Time
+	if timeoutSec > 0 {
+		timeoutChan = time.After(time.Duration(timeoutSec) * time.Second)
+	}
+
+	select {
+	case listKey := <-waitChan:
+		poppedElements, errorResponse, ok := LPop(listKey, 1)
+		if !ok {
+			return "", "", false, errorResponse, false
+		}
+		if len(poppedElements) != 1 {
+			panic(fmt.Sprintf("Expected 1 popped element, got %d", len(poppedElements)))
+		}
+		return poppedElements[0], listKey, true, "", true
+	case <-timeoutChan:
+		return "", "", false, "", true
+	}
 }
