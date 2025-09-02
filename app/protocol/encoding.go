@@ -39,3 +39,20 @@ func ToArray(a []string) string {
 	}
 	return arrayString
 }
+
+// Serializes to the RESP Array type with mixed content (strings and integers)
+func ToMixedArray(items []interface{}) string {
+	arrayString := fmt.Sprintf("%s%d\r\n", ARRAY, len(items))
+	for _, item := range items {
+		switch v := item.(type) {
+		case string:
+			arrayString += ToBulkString(v)
+		case int:
+			arrayString += ToInteger(v)
+		default:
+			// Fallback to string representation
+			arrayString += ToBulkString(fmt.Sprintf("%v", v))
+		}
+	}
+	return arrayString
+}

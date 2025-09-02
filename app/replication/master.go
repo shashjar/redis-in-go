@@ -11,10 +11,14 @@ import (
 
 // Represents the set of Redis commands that should be propagated from the master server to replicas
 var COMMANDS_TO_PROPAGATE = map[string]struct{}{
-	"set":  {},
-	"del":  {},
-	"incr": {},
-	"xadd": {},
+	"set":   {},
+	"del":   {},
+	"incr":  {},
+	"xadd":  {},
+	"rpush": {},
+	"lpush": {},
+	"lpop":  {},
+	"blpop": {},
 }
 
 const NUM_GET_ACK_BYTES = 37
