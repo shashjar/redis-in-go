@@ -1,11 +1,13 @@
 package commands
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"strings"
 
 	"github.com/shashjar/redis-in-go/app/protocol"
+	"github.com/shashjar/redis-in-go/app/pubsub"
 	"github.com/shashjar/redis-in-go/app/replication"
 )
 
@@ -17,7 +19,17 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		}
 	}
 
-	switch strings.ToLower(command[0]) {
+	commandType := strings.ToLower(command[0])
+
+	if pubsub.InSubscribedMode(conn) {
+		_, ok := pubsub.SUBSCRIBED_MODE_ALLOWED_COMMANDS[commandType]
+		if !ok {
+			write(conn, protocol.ToSimpleError(fmt.Sprintf("ERR can't execute '%s': only SUBSCRIBE / UNSUBSCRIBE / PING are allowed in this context", commandType)))
+			return
+		}
+	}
+
+	switch commandType {
 	case "command":
 		commandHandler(conn, command)
 	case "config":

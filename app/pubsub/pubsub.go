@@ -20,6 +20,21 @@ var PUBSUB_MANAGER = PubSubManager{
 	channelClients: make(map[string]map[net.Conn]struct{}),
 }
 
+// Stores clients that are in subscribed mode
+var SUBSCRIBED_MODE = map[net.Conn]struct{}{}
+
+// Stores the commands that are allowed while a client is in subscribed mode
+var SUBSCRIBED_MODE_ALLOWED_COMMANDS = map[string]struct{}{
+	"subscribe":   {},
+	"unsubscribe": {},
+	"ping":        {},
+}
+
+func InSubscribedMode(conn net.Conn) bool {
+	_, ok := SUBSCRIBED_MODE[conn]
+	return ok
+}
+
 // Subscribes the given client to the given channel, returning the number of channels
 // the client is currently subscribed to
 func Subscribe(conn net.Conn, channel string) int {
@@ -37,6 +52,8 @@ func Subscribe(conn net.Conn, channel string) int {
 		}
 		PUBSUB_MANAGER.channelClients[channel][conn] = struct{}{}
 	}
+
+	SUBSCRIBED_MODE[conn] = struct{}{}
 
 	return len(PUBSUB_MANAGER.clientChannels[conn])
 }
