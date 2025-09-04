@@ -45,7 +45,7 @@ func Subscribe(conn net.Conn, channel string) int {
 		PUBSUB_MANAGER.clientChannels[conn] = make(map[string]struct{})
 	}
 
-	if !alreadySubscribed(conn, channel) {
+	if !isSubscribed(conn, channel) {
 		PUBSUB_MANAGER.clientChannels[conn][channel] = struct{}{}
 		if _, ok := PUBSUB_MANAGER.channelClients[channel]; !ok {
 			PUBSUB_MANAGER.channelClients[channel] = make(map[net.Conn]struct{})
@@ -58,7 +58,21 @@ func Subscribe(conn net.Conn, channel string) int {
 	return len(PUBSUB_MANAGER.clientChannels[conn])
 }
 
-func alreadySubscribed(conn net.Conn, channel string) bool {
+// TODO: implement
+// Publishes the given message to the given channel, returning the number of clients that
+// the message was sent to
+func Publish(channel string, message string) int {
+	PUBSUB_MANAGER.mu.Lock()
+	defer PUBSUB_MANAGER.mu.Unlock()
+
+	if _, ok := PUBSUB_MANAGER.channelClients[channel]; !ok {
+		return 0
+	}
+
+	return len(PUBSUB_MANAGER.channelClients[channel])
+}
+
+func isSubscribed(conn net.Conn, channel string) bool {
 	_, okClientChannel := PUBSUB_MANAGER.clientChannels[conn][channel]
 	_, okChannelClient := PUBSUB_MANAGER.channelClients[channel][conn]
 	if okClientChannel != okChannelClient {
