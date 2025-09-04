@@ -21,7 +21,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 
 	commandType := strings.ToLower(command[0])
 
-	if pubsub.InSubscribedMode(conn) {
+	inSubscribedMode := pubsub.InSubscribedMode(conn)
+	if inSubscribedMode {
 		_, ok := pubsub.SUBSCRIBED_MODE_ALLOWED_COMMANDS[commandType]
 		if !ok {
 			write(conn, protocol.ToSimpleError(fmt.Sprintf("ERR can't execute '%s': only SUBSCRIBE / UNSUBSCRIBE / PING are allowed in this context", commandType)))
@@ -45,7 +46,7 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 	case "save":
 		save(conn)
 	case "ping":
-		ping(conn)
+		ping(conn, inSubscribedMode)
 	case "echo":
 		echo(conn, command)
 	case "type":

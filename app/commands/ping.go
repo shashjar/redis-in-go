@@ -7,6 +7,10 @@ import (
 )
 
 // PING command
-func ping(conn net.Conn) {
-	write(conn, protocol.ToSimpleString("PONG"))
+func ping(conn net.Conn, inSubscribedMode bool) {
+	if inSubscribedMode {
+		write(conn, protocol.ToArray([]string{"PONG", ""}))
+	} else {
+		write(conn, protocol.ToSimpleString("PONG"))
+	}
 }
