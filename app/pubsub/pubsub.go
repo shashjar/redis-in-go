@@ -1,8 +1,11 @@
 package pubsub
 
 import (
+	"log"
 	"net"
 	"sync"
+
+	"github.com/shashjar/redis-in-go/app/protocol"
 )
 
 // Represents a manager of Redis pubsub functionality, mapping between clients and the
@@ -58,18 +61,27 @@ func Subscribe(conn net.Conn, channel string) int {
 	return len(PUBSUB_MANAGER.clientChannels[conn])
 }
 
-// TODO: implement
 // Publishes the given message to the given channel, returning the number of clients that
 // the message was sent to
 func Publish(channel string, message string) int {
 	PUBSUB_MANAGER.mu.Lock()
 	defer PUBSUB_MANAGER.mu.Unlock()
 
-	if _, ok := PUBSUB_MANAGER.channelClients[channel]; !ok {
+	channelClients, ok := PUBSUB_MANAGER.channelClients[channel]
+	if !ok {
 		return 0
 	}
 
-	return len(PUBSUB_MANAGER.channelClients[channel])
+	for channelClient := range channelClients {
+		data := protocol.ToArray([]string{"message", channel, message})
+		_, err := channelClient.Write([]byte(data))
+		if err != nil {
+			log.Println("Error writing to subscribed client:", err.Error())
+			channelClient.Close()
+		}
+	}
+
+	return len(channelClients)
 }
 
 func isSubscribed(conn net.Conn, channel string) bool {
