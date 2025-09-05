@@ -25,6 +25,7 @@ var PUBSUB_MANAGER = PubSubManager{
 
 // Stores clients that are in subscribed mode
 var SUBSCRIBED_MODE = map[net.Conn]struct{}{}
+var SUBSCRIBED_MODE_MU sync.RWMutex
 
 // Stores the commands that are allowed while a client is in subscribed mode
 var SUBSCRIBED_MODE_ALLOWED_COMMANDS = map[string]struct{}{
@@ -34,12 +35,15 @@ var SUBSCRIBED_MODE_ALLOWED_COMMANDS = map[string]struct{}{
 }
 
 func InSubscribedMode(conn net.Conn) bool {
+	SUBSCRIBED_MODE_MU.RLock()
+	defer SUBSCRIBED_MODE_MU.RUnlock()
+
 	_, ok := SUBSCRIBED_MODE[conn]
 	return ok
 }
 
 // Subscribes the given client to the given channel, returning the number of channels
-// the client is currently subscribed to
+// the client is currently subscribed to (after subscribing)
 func Subscribe(conn net.Conn, channel string) int {
 	PUBSUB_MANAGER.mu.Lock()
 	defer PUBSUB_MANAGER.mu.Unlock()
@@ -56,16 +60,47 @@ func Subscribe(conn net.Conn, channel string) int {
 		PUBSUB_MANAGER.channelClients[channel][conn] = struct{}{}
 	}
 
+	SUBSCRIBED_MODE_MU.Lock()
 	SUBSCRIBED_MODE[conn] = struct{}{}
+	SUBSCRIBED_MODE_MU.Unlock()
 
 	return len(PUBSUB_MANAGER.clientChannels[conn])
+}
+
+// Unsubscribes the given client from the given channel, returning the number of channels
+// the client is currently subscribed to (after unsubscribing)
+func Unsubscribe(conn net.Conn, channel string) int {
+	PUBSUB_MANAGER.mu.Lock()
+	defer PUBSUB_MANAGER.mu.Unlock()
+
+	if isSubscribed(conn, channel) {
+		delete(PUBSUB_MANAGER.clientChannels[conn], channel)
+		if len(PUBSUB_MANAGER.clientChannels[conn]) == 0 {
+			delete(PUBSUB_MANAGER.clientChannels, conn)
+		}
+
+		delete(PUBSUB_MANAGER.channelClients[channel], conn)
+		if len(PUBSUB_MANAGER.channelClients[channel]) == 0 {
+			delete(PUBSUB_MANAGER.channelClients, channel)
+		}
+	}
+
+	clientChannels, ok := PUBSUB_MANAGER.clientChannels[conn]
+	if !ok {
+		SUBSCRIBED_MODE_MU.Lock()
+		delete(SUBSCRIBED_MODE, conn)
+		SUBSCRIBED_MODE_MU.Unlock()
+		return 0
+	}
+
+	return len(clientChannels)
 }
 
 // Publishes the given message to the given channel, returning the number of clients that
 // the message was sent to
 func Publish(channel string, message string) int {
-	PUBSUB_MANAGER.mu.Lock()
-	defer PUBSUB_MANAGER.mu.Unlock()
+	PUBSUB_MANAGER.mu.RLock()
+	defer PUBSUB_MANAGER.mu.RUnlock()
 
 	channelClients, ok := PUBSUB_MANAGER.channelClients[channel]
 	if !ok {
@@ -82,6 +117,24 @@ func Publish(channel string, message string) int {
 	}
 
 	return len(channelClients)
+}
+
+// Returns all channels that the given client is currently subscribed to
+func GetSubscribedChannels(conn net.Conn) []string {
+	PUBSUB_MANAGER.mu.RLock()
+	defer PUBSUB_MANAGER.mu.RUnlock()
+
+	clientChannels, ok := PUBSUB_MANAGER.clientChannels[conn]
+	if !ok {
+		return []string{}
+	}
+
+	subbedChannels := make([]string, 0, len(clientChannels))
+	for clientChannel := range clientChannels {
+		subbedChannels = append(subbedChannels, clientChannel)
+	}
+
+	return subbedChannels
 }
 
 func isSubscribed(conn net.Conn, channel string) bool {

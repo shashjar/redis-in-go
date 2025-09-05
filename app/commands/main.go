@@ -81,6 +81,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		blpop(conn, command)
 	case "subscribe":
 		subscribe(conn, command)
+	case "unsubscribe":
+		unsubscribe(conn, command)
 	case "publish":
 		publish(conn, command)
 	default:
