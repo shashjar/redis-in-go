@@ -39,6 +39,10 @@ Support for transactions is mainly implemented in `commands/transactions.go` in 
 
 [Redis Replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/) is achieved by the `replication` package. Running a replica server causes the replication handshake to be triggered and for mutation commands to be propagated from the master to all replicas, with sync checking possible via the `REPLCONF GETACK` command.
 
+## Pub/Sub
+
+Support for [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/) is provided via the `SUBSCRIBE`, `UNSUBSCRIBE`, and `PUBLISH` commands. Each client is identified by its associated `net.Conn` objects in Golang, and is associated with a set of channels it is subscribed to at any given time. The `pubsub` package contains the foundation of this implementation.
+
 ## Running the Server
 
 The `./run.sh` script is used to run the server. The program entrypoint accepts the following command-line arguments: `port`, `replicaof`, `dir`, & `dbfilename`. `port` is the port number on which to run the Redis server. `replicaof` should be provided with a string value "<MASTER_HOST> <MASTER_PORT>" indicating the master which this server is replicating. `dir` & `dbfilename` together provide the path of an RDB file from which to persist data on startup, and to save data to when dumping an RDB file to disk (see `persistence` above for more details). The below are valid ways to run a Redis server:
