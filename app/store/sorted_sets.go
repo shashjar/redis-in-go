@@ -30,3 +30,13 @@ func (sortedSet *SortedSet) addMembers(memberScores map[string]float64) int {
 	}
 	return numNewMembers
 }
+
+// Returns the rank and score of a member in the sorted set, and a boolean
+// indicating whether the member exists
+func (sortedSet *SortedSet) GetRankAndScore(member string) (int, float64, bool) {
+	if _, ok := sortedSet.Scores[member]; !ok {
+		return 0, 0, false
+	}
+
+	return sortedSet.SkipList.GetRank(member), sortedSet.Scores[member], true
+}

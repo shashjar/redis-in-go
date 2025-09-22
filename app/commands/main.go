@@ -87,6 +87,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		publish(conn, command)
 	case "zadd":
 		zadd(conn, command)
+	case "zrank":
+		zrank(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}

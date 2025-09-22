@@ -1,6 +1,9 @@
 package store
 
-import "math/rand/v2"
+import (
+	"fmt"
+	"math/rand/v2"
+)
 
 // Represents a skip list data structure
 type SkipList struct {
@@ -144,6 +147,41 @@ func (sl *SkipList) Delete(score float64, member string) bool {
 
 	sl.size--
 	return true
+}
+
+// Returns the rank (0-based index) of a member, where the member with the lowest
+// score has rank 0
+func (sl *SkipList) GetRank(member string) int {
+	node := sl.Search(member)
+	if node == nil {
+		return -1
+	}
+
+	// Simple linear count from the beginning
+	rank := 0
+	current := sl.head.next[0]
+
+	for current != nil {
+		if current.member == member {
+			return rank
+		}
+		rank++
+		current = current.next[0]
+	}
+
+	return -1 // Should not reach here
+}
+
+// Debug method to print all elements in order
+func (sl *SkipList) DebugPrint() {
+	fmt.Println("Skip list contents:")
+	current := sl.head.next[0]
+	rank := 0
+	for current != nil {
+		fmt.Printf("Rank %d: member='%s', score=%.1f\n", rank, current.member, current.score)
+		current = current.next[0]
+		rank++
+	}
 }
 
 func (sl *SkipList) randomLevel() int {

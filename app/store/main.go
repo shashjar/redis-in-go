@@ -244,3 +244,17 @@ func ZAdd(setKey string, memberScores map[string]float64) (int, string, bool) {
 	numNewMembers := sortedSet.addMembers(memberScores)
 	return numNewMembers, "", true
 }
+
+func ZRank(setKey string, member string) (int, float64, bool, string, bool) {
+	kv, ok := REDIS_STORE.get(setKey)
+	if ok && kv.Type != "zset" {
+		return 0, 0, false, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return 0, 0, false, "", true
+	}
+
+	sortedSet := kv.Value.(*SortedSet)
+
+	rank, score, memberExists := sortedSet.GetRankAndScore(member)
+	return rank, score, memberExists, "", true
+}
