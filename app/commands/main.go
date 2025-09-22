@@ -85,6 +85,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		unsubscribe(conn, command)
 	case "publish":
 		publish(conn, command)
+	case "zadd":
+		zadd(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}

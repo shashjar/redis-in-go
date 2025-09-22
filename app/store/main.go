@@ -225,3 +225,22 @@ func BLPop(listKeys []string, timeoutSec int) (string, string, bool, string, boo
 		return "", "", false, "", true
 	}
 }
+
+// Adds all the specified members with the specified scores to the sorted set associated with the given key,
+// creating it if it does not already exist
+func ZAdd(setKey string, memberScores map[string]float64) (int, string, bool) {
+	kv, ok := REDIS_STORE.get(setKey)
+	if ok && kv.Type != "zset" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	}
+
+	var sortedSet *SortedSet
+	if !ok {
+		sortedSet = createEmptySortedSet(setKey, &REDIS_STORE)
+	} else {
+		sortedSet = kv.Value.(*SortedSet)
+	}
+
+	numNewMembers := sortedSet.addMembers(memberScores)
+	return numNewMembers, "", true
+}
