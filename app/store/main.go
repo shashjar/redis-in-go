@@ -273,3 +273,16 @@ func ZRange(setKey string, startIndex int, stopIndex int) ([]string, string, boo
 	sortedSet := kv.Value.(*SortedSet)
 	return sortedSet.SkipList.GetElementsInRange(startIndex, stopIndex), "", true
 }
+
+// Returns the cardinality (number of elements) of the sorted set associated with the given key
+func ZCard(setKey string) (int, string, bool) {
+	kv, ok := REDIS_STORE.get(setKey)
+	if ok && kv.Type != "zset" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return 0, "", true
+	}
+
+	sortedSet := kv.Value.(*SortedSet)
+	return sortedSet.SkipList.size, "", true
+}

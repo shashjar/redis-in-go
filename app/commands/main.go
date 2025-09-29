@@ -91,6 +91,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		zrank(conn, command)
 	case "zrange":
 		zrange(conn, command)
+	case "zcard":
+		zcard(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}
