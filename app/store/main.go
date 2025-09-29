@@ -256,7 +256,7 @@ func ZRank(setKey string, member string) (int, float64, bool, string, bool) {
 
 	sortedSet := kv.Value.(*SortedSet)
 
-	rank, score, memberExists := sortedSet.GetRankAndScore(member)
+	rank, score, memberExists := sortedSet.getRankAndScore(member)
 	return rank, score, memberExists, "", true
 }
 
@@ -300,4 +300,18 @@ func ZScore(setKey string, member string) (float64, bool, string, bool) {
 
 	score, memberExists := sortedSet.Scores[member]
 	return score, memberExists, "", true
+}
+
+// Removes the specified members from the sorted set associated with the given key,
+// returning the number of members removed
+func ZRem(setKey string, members []string) (int, string, bool) {
+	kv, ok := REDIS_STORE.get(setKey)
+	if ok && kv.Type != "zset" {
+		return 0, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return 0, "", true
+	}
+
+	sortedSet := kv.Value.(*SortedSet)
+	return sortedSet.removeMembers(members), "", true
 }

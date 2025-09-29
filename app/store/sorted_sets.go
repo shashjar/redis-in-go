@@ -31,9 +31,24 @@ func (sortedSet *SortedSet) addMembers(memberScores map[string]float64) int {
 	return numNewMembers
 }
 
+func (sortedSet *SortedSet) removeMembers(members []string) int {
+	numRemovedMembers := 0
+	for _, member := range members {
+		currentScore, ok := sortedSet.Scores[member]
+		if !ok {
+			continue
+		}
+
+		sortedSet.SkipList.Delete(currentScore, member)
+		delete(sortedSet.Scores, member)
+		numRemovedMembers += 1
+	}
+	return numRemovedMembers
+}
+
 // Returns the rank and score of a member in the sorted set, and a boolean
 // indicating whether the member exists
-func (sortedSet *SortedSet) GetRankAndScore(member string) (int, float64, bool) {
+func (sortedSet *SortedSet) getRankAndScore(member string) (int, float64, bool) {
 	if _, ok := sortedSet.Scores[member]; !ok {
 		return 0, 0, false
 	}

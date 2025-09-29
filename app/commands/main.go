@@ -95,6 +95,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		zcard(conn, command)
 	case "zscore":
 		zscore(conn, command)
+	case "zrem":
+		zrem(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}
