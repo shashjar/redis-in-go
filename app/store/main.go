@@ -286,3 +286,18 @@ func ZCard(setKey string) (int, string, bool) {
 	sortedSet := kv.Value.(*SortedSet)
 	return sortedSet.SkipList.size, "", true
 }
+
+// Returns the score of the member in the sorted set associated with the given key
+func ZScore(setKey string, member string) (float64, bool, string, bool) {
+	kv, ok := REDIS_STORE.get(setKey)
+	if ok && kv.Type != "zset" {
+		return 0, false, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return 0, false, "", true
+	}
+
+	sortedSet := kv.Value.(*SortedSet)
+
+	score, memberExists := sortedSet.Scores[member]
+	return score, memberExists, "", true
+}
