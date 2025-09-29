@@ -89,6 +89,8 @@ func executeCommand(command []string, numCommandBytes int, transactionExecuting 
 		zadd(conn, command)
 	case "zrank":
 		zrank(conn, command)
+	case "zrange":
+		zrange(conn, command)
 	default:
 		unknownCommand(conn, command)
 	}

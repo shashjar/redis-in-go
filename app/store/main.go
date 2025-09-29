@@ -245,6 +245,7 @@ func ZAdd(setKey string, memberScores map[string]float64) (int, string, bool) {
 	return numNewMembers, "", true
 }
 
+// Returns the rank and score of the member in the sorted set associated with the given key
 func ZRank(setKey string, member string) (int, float64, bool, string, bool) {
 	kv, ok := REDIS_STORE.get(setKey)
 	if ok && kv.Type != "zset" {
@@ -257,4 +258,18 @@ func ZRank(setKey string, member string) (int, float64, bool, string, bool) {
 
 	rank, score, memberExists := sortedSet.GetRankAndScore(member)
 	return rank, score, memberExists, "", true
+}
+
+// Returns the sorted elements in the range [startIndex, stopIndex] in the sorted set associated
+// with the given key
+func ZRange(setKey string, startIndex int, stopIndex int) ([]string, string, bool) {
+	kv, ok := REDIS_STORE.get(setKey)
+	if ok && kv.Type != "zset" {
+		return nil, "WRONGTYPE Operation against a key holding the wrong kind of value", false
+	} else if !ok {
+		return []string{}, "", true
+	}
+
+	sortedSet := kv.Value.(*SortedSet)
+	return sortedSet.SkipList.GetElementsInRange(startIndex, stopIndex), "", true
 }

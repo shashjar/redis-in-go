@@ -172,6 +172,33 @@ func (sl *SkipList) GetRank(member string) int {
 	return -1 // Should not reach here
 }
 
+// Returns the sorted elements in the range [startIndex, stopIndex]
+func (sl *SkipList) GetElementsInRange(startIndex int, stopIndex int) []string {
+	if startIndex < 0 {
+		startIndex = 0
+	}
+
+	if stopIndex >= sl.size {
+		stopIndex = sl.size - 1
+	}
+
+	if startIndex > stopIndex {
+		return []string{}
+	}
+
+	elements := []string{}
+	current := sl.head.next[0]
+	rank := 0
+	for current != nil && rank <= stopIndex {
+		if rank >= startIndex {
+			elements = append(elements, current.member)
+		}
+		rank++
+		current = current.next[0]
+	}
+	return elements
+}
+
 // Debug method to print all elements in order
 func (sl *SkipList) DebugPrint() {
 	fmt.Println("Skip list contents:")
